@@ -100,7 +100,7 @@ namespace MAD.Integration.Common
                 object invokeResult = configure.Invoke(this.startupRef, paramsToInject.ToArray());
 
                 if (invokeResult is Task t)
-                    t.RunSynchronously();
+                    t.Wait();
             }
         }
 
