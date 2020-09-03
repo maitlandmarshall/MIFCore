@@ -34,10 +34,10 @@ namespace MAD.Integration.Common.Jobs
         {
             try
             {
-                bool failedState = context.NewState is FailedState;
+                //bool failedState = context.NewState is FailedState;
                 bool deletedState = context.NewState is DeletedState;
 
-                if (failedState || deletedState)
+                if (deletedState)
                 {
                     RemoveFingerprint(context.Connection, context.BackgroundJob.Job);
                 }

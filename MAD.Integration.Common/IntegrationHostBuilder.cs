@@ -2,10 +2,10 @@
 using Autofac.Extensions.DependencyInjection;
 using MAD.Integration.Common.Hangfire;
 using MAD.Integration.Common.Http;
-using MAD.Integration.Common.Jobs;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -38,6 +38,11 @@ namespace MAD.Integration.Common
 
             IHostBuilder hostBuilder = Host.CreateDefaultBuilder()
                 .UseWindowsService()
+                .ConfigureLogging(cfg =>
+                {
+                    cfg.AddFilter("Microsoft.EntityFrameworkCore", LogLevel.Warning);
+                    cfg.AddFilter("Hangfire", LogLevel.Error);
+                })
                 .UseServiceProviderFactory(new AutofacChildLifetimeScopeServiceProviderFactory(rootContainer));
 
             if (rootContainer.TryResolve<AspNetCoreConfig>(out AspNetCoreConfig aspNetCoreConfig))

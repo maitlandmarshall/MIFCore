@@ -22,19 +22,20 @@ namespace MAD.Integration.Common.Jobs
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            var hangfireRootScope = this.lifetimeScope.BeginLifetimeScope();
-            hangfireRootScope.ChildLifetimeScopeBeginning += RootScope_ChildLifetimeScopeBeginning;
+            var childScope = this.lifetimeScope.BeginLifetimeScope();
+            var options = new BackgroundJobServerOptions()
+            {
+                Activator = this.activator,
+                Queues = new[] { JobQueue.Alpha, JobQueue.Beta, JobQueue.Default, JobQueue.Low }
+            };
+
+            childScope.ChildLifetimeScopeBeginning += this.RootScope_ChildLifetimeScopeBeginning;
 
             this.config.UseFilter<BackgroundJobContext>(new BackgroundJobContext());
             this.config.UseFilter<BackgroundJobLifecycleEvents>(new BackgroundJobLifecycleEvents());
-            this.activator = new AutofacJobActivator(hangfireRootScope);
+            this.activator = new AutofacJobActivator(childScope);
 
-            BackgroundJobServerOptions options = new BackgroundJobServerOptions()
-            {
-                Activator = this.activator
-            };
-
-            using (BackgroundJobServer server = new BackgroundJobServer(options))
+            using (var server = new BackgroundJobServer(options))
             {
                 await server.WaitForShutdownAsync(stoppingToken);
             }
