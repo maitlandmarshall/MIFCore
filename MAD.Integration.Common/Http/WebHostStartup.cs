@@ -1,5 +1,6 @@
 ﻿using Autofac;
 using Autofac.Extensions.DependencyInjection;
+using Hangfire;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using System;
@@ -13,6 +14,8 @@ namespace MAD.Integration.Common.Http
     {
         public void ConfigureServices(IServiceCollection serviceDescriptors)
         {
+            serviceDescriptors.AddHangfire(_ => { });
+
             serviceDescriptors.AddMvcCore()
                 .AddApplicationPart(Assembly.GetEntryAssembly());
         }
@@ -20,7 +23,12 @@ namespace MAD.Integration.Common.Http
         public void Configure(IApplicationBuilder app)
         {
             app.UseRouting();
-            app.UseEndpoints(cfg => cfg.MapControllers());
+            app.UseEndpoints(cfg => {
+                cfg.MapControllers();
+                cfg.MapHangfireDashboard();
+            });
+
+            app.UseHangfireDashboard();
         }
     }
 }

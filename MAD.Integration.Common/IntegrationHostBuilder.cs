@@ -2,6 +2,7 @@
 using Autofac.Extensions.DependencyInjection;
 using MAD.Integration.Common.Hangfire;
 using MAD.Integration.Common.Http;
+using MAD.Integration.Common.Jobs;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -68,6 +69,7 @@ namespace MAD.Integration.Common
 
             return host;
         }
+
 
         private void HandleStartupConfigureServices()
         {

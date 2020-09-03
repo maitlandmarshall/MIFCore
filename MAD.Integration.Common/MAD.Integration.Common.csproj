@@ -8,6 +8,7 @@
   <ItemGroup>
     <PackageReference Include="Autofac" Version="5.2.0" />
     <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="6.0.0" />
+    <PackageReference Include="Hangfire.AspNetCore" Version="1.7.12" />
 
     <PackageReference Include="Hangfire.Autofac.Core" Version="1.0.1" />
     <PackageReference Include="Hangfire.Core" Version="1.7.12" />

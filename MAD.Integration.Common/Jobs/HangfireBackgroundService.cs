@@ -10,23 +10,39 @@ namespace MAD.Integration.Common.Jobs
     public class HangfireBackgroundService : BackgroundService
     {
         private readonly ILifetimeScope lifetimeScope;
+        private readonly IGlobalConfiguration config;
 
-        public HangfireBackgroundService(ILifetimeScope lifetimeScope)
+        private AutofacJobActivator activator;
+
+        public HangfireBackgroundService(ILifetimeScope lifetimeScope, IGlobalConfiguration config)
         {
             this.lifetimeScope = lifetimeScope;
+            this.config = config;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            var hangfireRootScope = this.lifetimeScope.BeginLifetimeScope();
+            hangfireRootScope.ChildLifetimeScopeBeginning += RootScope_ChildLifetimeScopeBeginning;
+
+            this.config.UseFilter<BackgroundJobContext>(new BackgroundJobContext());
+            this.config.UseFilter<BackgroundJobLifecycleEvents>(new BackgroundJobLifecycleEvents());
+            this.activator = new AutofacJobActivator(hangfireRootScope);
+
             BackgroundJobServerOptions options = new BackgroundJobServerOptions()
             {
-                Activator = new AutofacJobActivator(this.lifetimeScope.BeginLifetimeScope())
+                Activator = this.activator
             };
 
             using (BackgroundJobServer server = new BackgroundJobServer(options))
             {
                 await server.WaitForShutdownAsync(stoppingToken);
             }
+        }
+
+        private void RootScope_ChildLifetimeScopeBeginning(object sender, Autofac.Core.Lifetime.LifetimeScopeBeginningEventArgs e)
+        {
+            ThreadStaticScope<ILifetimeScope>.Current = e.LifetimeScope;
         }
     }
 }
