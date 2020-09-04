@@ -12,7 +12,8 @@ using System.Threading.Tasks;
 namespace MAD.Integration.Common.Jobs
 {
     [AttributeUsage(AttributeTargets.Method)]
-    public class ConsumerAttribute : JobFilterAttribute, IServerFilter
+    public class ConsumerAttribute : Attribute { }
+    public class EnableBackgroundJobResultConsumersFilter : JobFilterAttribute, IServerFilter
     {
         private Lazy<IEnumerable<MethodInfo>> consumers;
         private IEnumerable<MethodInfo> Consumers
@@ -20,7 +21,7 @@ namespace MAD.Integration.Common.Jobs
             get => this.consumers.Value;
         }
 
-        public ConsumerAttribute()
+        public EnableBackgroundJobResultConsumersFilter()
         {
             this.consumers = new Lazy<IEnumerable<MethodInfo>>(() =>
             {
@@ -36,7 +37,7 @@ namespace MAD.Integration.Common.Jobs
 
             if (result != null)
             {
-                var scope = ThreadStaticValue<ILifetimeScope>.Current;
+                var scope = BackgroundJobContext.ParentBackgroundJobScope;
                 var resultType = result.GetType();
                 var resultConsumers = this.Consumers.Where(y => y.GetParameters().Any(z => z.ParameterType.IsAssignableFrom(resultType)));
 
@@ -46,14 +47,11 @@ namespace MAD.Integration.Common.Jobs
                     consumer.Invoke(consumerInstance, new[] { result });
                 }
             }
-
-            ThreadStaticValue<Type>.Current = null;
-            ThreadStaticValue<ILifetimeScope>.OnCurrentChanged = null;
         }
 
         public void OnPerforming(PerformingContext filterContext)
         {
-            throw new NotImplementedException();
+            
         }
     }
 }

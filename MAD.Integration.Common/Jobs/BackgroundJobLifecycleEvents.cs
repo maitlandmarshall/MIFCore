@@ -16,21 +16,17 @@ namespace MAD.Integration.Common.Jobs
     {
         public void OnPerforming(PerformingContext filterContext)
         {
-            var backgroundJobType = filterContext.BackgroundJob.Job.Type;
-
-            ThreadStaticValue<Type>.Current = backgroundJobType;
-            ThreadStaticValue<ILifetimeScope>.OnCurrentChanged = OnScopeBeginning;
+            BackgroundJobContext.CurrentLifetimeScopeChanged = OnScopeBeginning;
         }
 
         public void OnPerformed(PerformedContext filterContext)
         {
-            ThreadStaticValue<Type>.Current = null;
-            ThreadStaticValue<ILifetimeScope>.OnCurrentChanged = null;
+            BackgroundJobContext.CurrentLifetimeScopeChanged = null;
         }
 
         private void OnScopeBeginning(ILifetimeScope obj)
         {
-            var jobInstance = obj.Resolve(ThreadStaticValue<Type>.Current);
+            var jobInstance = obj.Resolve(BackgroundJobContext.CurrentJob.Job.Type);
             var init = jobInstance as IJobInitialize;
 
             try

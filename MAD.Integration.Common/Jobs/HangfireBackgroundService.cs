@@ -1,4 +1,5 @@
 ﻿using Autofac;
+using Autofac.Core.Lifetime;
 using Hangfire;
 using Hangfire.Autofac;
 using MAD.Integration.Common.Jobs.Utils;
@@ -10,23 +11,22 @@ namespace MAD.Integration.Common.Jobs
 {
     public class HangfireBackgroundService : BackgroundService
     {
-        private readonly ILifetimeScope lifetimeScope;
+        private readonly ILifetimeScope rootScope;
         private readonly IGlobalConfiguration config;
 
-        private AutofacJobActivator activator;
-
-        public HangfireBackgroundService(ILifetimeScope lifetimeScope, IGlobalConfiguration config)
+        public HangfireBackgroundService(ILifetimeScope rootScope, IGlobalConfiguration config)
         {
-            this.lifetimeScope = lifetimeScope;
+            this.rootScope = rootScope;
             this.config = config;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            var childScope = this.lifetimeScope.BeginLifetimeScope();
+            var childScope = this.rootScope.BeginLifetimeScope("HangfireServiceScope");
+            var activator = new AutofacJobActivator(childScope);
             var options = new BackgroundJobServerOptions()
             {
-                Activator = this.activator,
+                Activator = activator,
                 Queues = new[] { JobQueue.Alpha, JobQueue.Beta, JobQueue.Default, JobQueue.Low }
             };
 
@@ -35,17 +35,16 @@ namespace MAD.Integration.Common.Jobs
             this.config.UseFilter<BackgroundJobContext>(new BackgroundJobContext());
             this.config.UseFilter<BackgroundJobLifecycleEvents>(new BackgroundJobLifecycleEvents());
 
-            this.activator = new AutofacJobActivator(childScope);
-
             using (var server = new BackgroundJobServer(options))
             {
                 await server.WaitForShutdownAsync(stoppingToken);
             }
         }
 
-        private void RootScope_ChildLifetimeScopeBeginning(object sender, Autofac.Core.Lifetime.LifetimeScopeBeginningEventArgs e)
+        private void RootScope_ChildLifetimeScopeBeginning(object sender, LifetimeScopeBeginningEventArgs e)
         {
-            ThreadStaticValue<ILifetimeScope>.Current = e.LifetimeScope;
+            BackgroundJobContext.ParentBackgroundJobScope = sender as LifetimeScope;
+            BackgroundJobContext.CurrentLifetimeScope = e.LifetimeScope;
         }
     }
 }
