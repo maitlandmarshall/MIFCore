@@ -2,6 +2,7 @@
 using Autofac.Util;
 using Hangfire.Common;
 using Hangfire.Server;
+using MAD.Integration.Common.Jobs.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -35,7 +36,7 @@ namespace MAD.Integration.Common.Jobs
 
             if (result != null)
             {
-                var scope = ThreadStaticScope<ILifetimeScope>.Current;
+                var scope = ThreadStaticValue<ILifetimeScope>.Current;
                 var resultType = result.GetType();
                 var resultConsumers = this.Consumers.Where(y => y.GetParameters().Any(z => z.ParameterType.IsAssignableFrom(resultType)));
 
@@ -46,8 +47,8 @@ namespace MAD.Integration.Common.Jobs
                 }
             }
 
-            ThreadStaticScope<Type>.Current = null;
-            ThreadStaticScope<ILifetimeScope>.OnCurrentChanged = null;
+            ThreadStaticValue<Type>.Current = null;
+            ThreadStaticValue<ILifetimeScope>.OnCurrentChanged = null;
         }
 
         public void OnPerforming(PerformingContext filterContext)

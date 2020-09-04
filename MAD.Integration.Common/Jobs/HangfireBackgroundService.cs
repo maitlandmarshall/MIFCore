@@ -1,6 +1,7 @@
 ﻿using Autofac;
 using Hangfire;
 using Hangfire.Autofac;
+using MAD.Integration.Common.Jobs.Utils;
 using Microsoft.Extensions.Hosting;
 using System.Threading;
 using System.Threading.Tasks;
@@ -33,6 +34,7 @@ namespace MAD.Integration.Common.Jobs
 
             this.config.UseFilter<BackgroundJobContext>(new BackgroundJobContext());
             this.config.UseFilter<BackgroundJobLifecycleEvents>(new BackgroundJobLifecycleEvents());
+
             this.activator = new AutofacJobActivator(childScope);
 
             using (var server = new BackgroundJobServer(options))
@@ -43,7 +45,7 @@ namespace MAD.Integration.Common.Jobs
 
         private void RootScope_ChildLifetimeScopeBeginning(object sender, Autofac.Core.Lifetime.LifetimeScopeBeginningEventArgs e)
         {
-            ThreadStaticScope<ILifetimeScope>.Current = e.LifetimeScope;
+            ThreadStaticValue<ILifetimeScope>.Current = e.LifetimeScope;
         }
     }
 }

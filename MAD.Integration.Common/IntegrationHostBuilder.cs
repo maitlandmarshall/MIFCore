@@ -97,14 +97,15 @@ namespace MAD.Integration.Common
             if (this.startupRef is null)
                 return;
 
-            MethodInfo configure = this.startupRef.GetType().GetMethod("Configure");
+            var configureMethod = this.startupRef.GetType().GetMethod("Configure");
+            using var startupScope = serviceProvider.CreateScope();
 
-            if (configure != null)
+            if (configureMethod != null)
             {
-                IEnumerable<object> paramsToInject = configure.GetParameters()
-                    .Select(y => serviceProvider.GetService(y.ParameterType));
+                IEnumerable<object> paramsToInject = configureMethod.GetParameters()
+                    .Select(y => startupScope.ServiceProvider.GetService(y.ParameterType));
 
-                object invokeResult = configure.Invoke(this.startupRef, paramsToInject.ToArray());
+                object invokeResult = configureMethod.Invoke(this.startupRef, paramsToInject.ToArray());
 
                 if (invokeResult is Task t)
                     t.Wait();

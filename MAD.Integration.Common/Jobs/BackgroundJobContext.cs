@@ -1,6 +1,8 @@
-﻿using Hangfire;
+﻿using Autofac;
+using Hangfire;
 using Hangfire.Common;
 using Hangfire.Server;
+using MAD.Integration.Common.Jobs.Utils;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -11,16 +13,15 @@ namespace MAD.Integration.Common.Jobs
 {
     public class BackgroundJobContext : JobFilterAttribute, IServerFilter
     {
-        [ThreadStatic]
-        private static BackgroundJob currentJob;
-
         public static BackgroundJob CurrentJob
         {
-            get => currentJob;
-            set
-            {
-                currentJob = value;
-            }
+            get => ThreadStaticValue<BackgroundJob>.Current;
+            set => ThreadStaticValue<BackgroundJob>.Current = value;
+        }
+
+        public static IServiceProvider CurrentJobServices
+        {
+            get => ThreadStaticValue<ILifetimeScope>.Current as IServiceProvider;
         }
 
         public void OnPerformed(PerformedContext filterContext) { }
