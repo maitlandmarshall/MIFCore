@@ -1,5 +1,6 @@
 ﻿using Autofac;
 using Autofac.Extensions.DependencyInjection;
+using MAD.Integration.Common.Analytics;
 using MAD.Integration.Common.Hangfire;
 using MAD.Integration.Common.Http;
 using Microsoft.AspNetCore.Hosting;
@@ -14,7 +15,6 @@ using System.Threading.Tasks;
 
 namespace MAD.Integration.Common
 {
-
     public partial class IntegrationHostBuilder : IIntegrationHostBuilder
     {
         private object startupRef;
@@ -128,6 +128,13 @@ namespace MAD.Integration.Common
         public IIntegrationHostBuilder UseAspNetCore()
         {
             this.ConfigureServices(y => y.AddAspNetCore());
+
+            return this;
+        }
+
+        public IIntegrationHostBuilder UseAppInsights()
+        {
+            this.ConfigureServices(y => y.AddAppInsights());
 
             return this;
         }

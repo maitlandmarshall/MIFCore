@@ -12,7 +12,8 @@ namespace MAD.Integration.Common.Jobs
     public class DisableMultipleQueuedItemsFilter : JobFilterAttribute, IClientFilter, IServerFilter, IApplyStateFilter
     {
         private static readonly TimeSpan LockTimeout = TimeSpan.FromSeconds(5);
-        private static readonly TimeSpan FingerprintTimeout = TimeSpan.FromHours(1);
+
+        public uint FingerprintTimeoutMinutes { get; set; } = 0;
 
         public void OnCreating(CreatingContext filterContext)
         {
@@ -54,7 +55,7 @@ namespace MAD.Integration.Common.Jobs
 
         }
 
-        private static bool AddFingerprintIfNotExists(IStorageConnection connection, Job job)
+        private bool AddFingerprintIfNotExists(IStorageConnection connection, Job job)
         {
             using (connection.AcquireDistributedLock(GetFingerprintLockKey(job), LockTimeout))
             {
@@ -63,12 +64,22 @@ namespace MAD.Integration.Common.Jobs
 
                 if (fingerprint != null)
                 {
-                    if (fingerprint.ContainsKey("Timestamp") &&
-                        DateTimeOffset.TryParse(fingerprint["Timestamp"], null, DateTimeStyles.RoundtripKind, out DateTimeOffset timestamp) &&
-                        DateTimeOffset.UtcNow <= timestamp.Add(FingerprintTimeout))
+                    if (fingerprint.ContainsKey("Timestamp")
+                        && DateTimeOffset.TryParse(fingerprint["Timestamp"], null, DateTimeStyles.RoundtripKind, out DateTimeOffset timestamp))
                     {
-                        // Actual fingerprint found, returning.
-                        return false;
+                        if (this.FingerprintTimeoutMinutes > 0)
+                        {
+                            var timestampWithTimeout = timestamp.Add(TimeSpan.FromHours(FingerprintTimeoutMinutes));
+
+                            if (DateTimeOffset.UtcNow <= timestampWithTimeout)
+                            {
+                                return false;
+                            }
+                        }
+                        else
+                        {
+                            return false;
+                        }
                     }
                 }
 
@@ -83,7 +94,7 @@ namespace MAD.Integration.Common.Jobs
             }
         }
 
-        private static void RemoveFingerprint(IStorageConnection connection, Job job)
+        private void RemoveFingerprint(IStorageConnection connection, Job job)
         {
             using (connection.AcquireDistributedLock(GetFingerprintLockKey(job), LockTimeout))
             using (IWriteOnlyTransaction transaction = connection.CreateWriteTransaction())

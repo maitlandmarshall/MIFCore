@@ -14,6 +14,7 @@ namespace MAD.Integration.Common
 
         IIntegrationHostBuilder UseHangfire();
         IIntegrationHostBuilder UseAspNetCore();
+        IIntegrationHostBuilder UseAppInsights();
 
         IHost Build();
     }
