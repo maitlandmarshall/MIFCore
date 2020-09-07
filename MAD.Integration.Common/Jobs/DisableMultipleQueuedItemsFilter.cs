@@ -69,7 +69,7 @@ namespace MAD.Integration.Common.Jobs
                     {
                         if (this.FingerprintTimeoutMinutes > 0)
                         {
-                            var timestampWithTimeout = timestamp.Add(TimeSpan.FromHours(FingerprintTimeoutMinutes));
+                            var timestampWithTimeout = timestamp.Add(TimeSpan.FromMinutes(FingerprintTimeoutMinutes));
 
                             if (DateTimeOffset.UtcNow <= timestampWithTimeout)
                             {
