@@ -1,8 +1,5 @@
 ﻿using Autofac;
-using Autofac.Core.Lifetime;
 using Hangfire;
-using Hangfire.Autofac;
-using MAD.Integration.Common.Jobs.Utils;
 using Microsoft.Extensions.Hosting;
 using System.Threading;
 using System.Threading.Tasks;

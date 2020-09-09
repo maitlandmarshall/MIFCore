@@ -1,22 +1,24 @@
 ﻿using Autofac;
+using Hangfire;
 using Hangfire.Annotations;
-using Hangfire.Autofac;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace MAD.Integration.Common.Jobs
 {
-    public class AutofacLifecycleJobActivator : AutofacJobActivator
+    public class AutofacLifecycleJobActivator : JobActivator
     {
-        public AutofacLifecycleJobActivator([NotNull] ILifetimeScope lifetimeScope, bool useTaggedLifetimeScope = true) : base(lifetimeScope, useTaggedLifetimeScope)
+        public const string LifetimeScopeTag = "BackgroundJobScope";
+
+        private readonly ILifetimeScope lifetimeScope;
+
+        public AutofacLifecycleJobActivator([NotNull] ILifetimeScope lifetimeScope)
         {
+            this.lifetimeScope = lifetimeScope;
         }
 
         public override object ActivateJob(Type jobType)
         {
-            var jobInstance = base.ActivateJob(jobType);
+            var jobInstance = this.lifetimeScope.Resolve(jobType);
 
             if (jobInstance is IJobActivated jobInitialize)
             {
@@ -24,6 +26,38 @@ namespace MAD.Integration.Common.Jobs
             }
 
             return jobInstance;
+        }
+
+        public override JobActivatorScope BeginScope(JobActivatorContext context)
+        {
+            return new AutofacScope(this.lifetimeScope.BeginLifetimeScope(LifetimeScopeTag));
+        }
+
+        private class AutofacScope : JobActivatorScope
+        {
+            private readonly ILifetimeScope lifetimeScope;
+
+            public AutofacScope(ILifetimeScope lifetimeScope)
+            {
+                this.lifetimeScope = lifetimeScope;
+            }
+
+            public override object Resolve(Type type)
+            {
+                var jobInstance = this.lifetimeScope.Resolve(type);
+
+                if (jobInstance is IJobActivated jobInitialize)
+                {
+                    jobInitialize.Activated();
+                }
+
+                return jobInstance;
+            }
+
+            public override void DisposeScope()
+            {
+                this.lifetimeScope.Dispose();
+            }
         }
     }
 }
