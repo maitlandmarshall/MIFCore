@@ -14,6 +14,8 @@ namespace MAD.Integration.Common.Jobs
         private readonly ILifetimeScope rootScope;
         private readonly IGlobalConfiguration config;
 
+        internal static ILifetimeScope ServiceScope { get; private set; }
+
         public HangfireBackgroundService(ILifetimeScope rootScope, IGlobalConfiguration config)
         {
             this.rootScope = rootScope;
@@ -22,8 +24,8 @@ namespace MAD.Integration.Common.Jobs
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            var childScope = this.rootScope.BeginLifetimeScope("HangfireServiceScope");
-            var activator = new AutofacJobActivator(childScope);
+            var childScope = ServiceScope = this.rootScope.BeginLifetimeScope("HangfireServiceScope");
+            var activator = new AutofacLifecycleJobActivator(childScope);
             var options = new BackgroundJobServerOptions()
             {
                 Activator = activator,
