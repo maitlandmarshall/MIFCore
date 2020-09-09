@@ -14,6 +14,7 @@ namespace MAD.Integration.Common.Jobs
         private static readonly TimeSpan LockTimeout = TimeSpan.FromSeconds(5);
 
         public uint FingerprintTimeoutMinutes { get; set; } = 0;
+        public bool IncludeFailedJobs { get; set; } = true;
 
         public void OnCreating(CreatingContext filterContext)
         {
@@ -35,10 +36,10 @@ namespace MAD.Integration.Common.Jobs
         {
             try
             {
-                //bool failedState = context.NewState is FailedState;
+                bool failedState = context.NewState is FailedState;
                 bool deletedState = context.NewState is DeletedState;
 
-                if (deletedState)
+                if (deletedState || (this.IncludeFailedJobs == false && failedState))
                 {
                     RemoveFingerprint(context.Connection, context.BackgroundJob.Job);
                 }

@@ -2,7 +2,6 @@
 using Autofac.Util;
 using Hangfire.Common;
 using Hangfire.Server;
-using MAD.Integration.Common.Jobs.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -37,7 +36,7 @@ namespace MAD.Integration.Common.Jobs
 
             if (result != null)
             {
-                var scope = BackgroundJobContext.ParentBackgroundJobScope;
+                var scope = HangfireBackgroundService.ServiceScope;
                 var resultType = result.GetType();
                 var resultConsumers = this.Consumers.Where(y => y.GetParameters().Any(z => z.ParameterType.IsAssignableFrom(resultType)));
 
@@ -51,7 +50,7 @@ namespace MAD.Integration.Common.Jobs
 
         public void OnPerforming(PerformingContext filterContext)
         {
-            
+
         }
     }
 }

@@ -5,9 +5,8 @@ using System.Threading.Tasks;
 
 namespace MAD.Integration.Common.Jobs
 {
-    public interface IJobInitialize
+    public interface IJobActivated
     {
-        void Initialized();
-        void Deinitialized();
+        void Activated();
     }
 }

@@ -12,9 +12,11 @@ namespace MAD.Integration.Common.Hangfire
 {
     internal static class AspNetCoreServiceCollectionExtensions
     {
-        public static IServiceCollection AddAspNetCore(this IServiceCollection serviceCollection)
+        public static IServiceCollection AddAspNetCore(this IServiceCollection serviceCollection, AspNetCoreConfig aspNetCoreConfig = null)
         {
-            serviceCollection.AddSingleton<AspNetCoreConfig>();
+            aspNetCoreConfig ??= new AspNetCoreConfig();
+
+            serviceCollection.AddSingleton<AspNetCoreConfig>(aspNetCoreConfig);
 
             return serviceCollection;
         }
