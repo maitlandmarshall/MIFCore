@@ -14,39 +14,20 @@ namespace MAD.Integration.Common.Jobs
 {
     public class BackgroundJobContext : JobFilterAttribute, IServerFilter
     {
-        public static BackgroundJob CurrentJob
+        public static PerformContext Current
         {
-            get => ThreadStaticValue<BackgroundJob>.Current;
-            set => ThreadStaticValue<BackgroundJob>.Current = value;
+            get => AsyncLocalValue<PerformContext>.Current;
+            set => AsyncLocalValue<PerformContext>.Current = value;
         }
 
-        public static IServiceProvider CurrentJobServices
+        void IServerFilter.OnPerformed(PerformedContext filterContext)
         {
-            get => ThreadStaticValue<ILifetimeScope>.Current as IServiceProvider;
+            Current = filterContext;
         }
 
-        internal static ILifetimeScope CurrentLifetimeScope
-        {
-            get => ThreadStaticValue<ILifetimeScope>.Current;
-            set => ThreadStaticValue<ILifetimeScope>.Current = value;
-        }
-
-        internal static Action<ILifetimeScope> CurrentLifetimeScopeChanged
-        {
-            get => ThreadStaticValue<ILifetimeScope>.OnCurrentChanged;
-            set => ThreadStaticValue<ILifetimeScope>.OnCurrentChanged = value;
-        }
-
-        internal static LifetimeScope ParentBackgroundJobScope
-        {
-            get => ThreadStaticValue<LifetimeScope>.Current;
-            set => ThreadStaticValue<LifetimeScope>.Current = value;
-        }
-
-        void IServerFilter.OnPerformed(PerformedContext filterContext) { }
         void IServerFilter.OnPerforming(PerformingContext filterContext)
         {
-            CurrentJob = filterContext.BackgroundJob;
+            Current = filterContext;
         }
     }
 }

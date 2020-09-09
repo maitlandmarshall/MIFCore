@@ -1,5 +1,6 @@
 ﻿using Autofac;
 using Autofac.Extensions.DependencyInjection;
+using Hangfire;
 using MAD.Integration.Common.Analytics;
 using MAD.Integration.Common.Hangfire;
 using MAD.Integration.Common.Http;
@@ -118,16 +119,22 @@ namespace MAD.Integration.Common
             return this;
         }
 
-        public IIntegrationHostBuilder UseHangfire()
+        public IIntegrationHostBuilder UseHangfire() => this.UseHangfire(null);
+        public IIntegrationHostBuilder UseHangfire(Action<IGlobalConfiguration> configureDelegate)
         {
+            configureDelegate?.Invoke(GlobalConfiguration.Configuration);
             this.ConfigureServices(y => y.AddHangfire());
 
             return this;
         }
 
-        public IIntegrationHostBuilder UseAspNetCore()
+        public IIntegrationHostBuilder UseAspNetCore() => this.UseAspNetCore(null);
+        public IIntegrationHostBuilder UseAspNetCore(Action<AspNetCoreConfig> configureDelegate)
         {
-            this.ConfigureServices(y => y.AddAspNetCore());
+            var config = new AspNetCoreConfig();
+            configureDelegate?.Invoke(config);
+
+            this.ConfigureServices(y => y.AddAspNetCore(config));
 
             return this;
         }
@@ -138,5 +145,7 @@ namespace MAD.Integration.Common
 
             return this;
         }
+
+
     }
 }

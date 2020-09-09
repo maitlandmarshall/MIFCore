@@ -30,21 +30,12 @@ namespace MAD.Integration.Common.Jobs
                 Queues = new[] { JobQueue.Alpha, JobQueue.Beta, JobQueue.Default, JobQueue.Low }
             };
 
-            childScope.ChildLifetimeScopeBeginning += this.RootScope_ChildLifetimeScopeBeginning;
-
             this.config.UseFilter<BackgroundJobContext>(new BackgroundJobContext());
-            this.config.UseFilter<BackgroundJobLifecycleEvents>(new BackgroundJobLifecycleEvents());
 
             using (var server = new BackgroundJobServer(options))
             {
                 await server.WaitForShutdownAsync(stoppingToken);
             }
-        }
-
-        private void RootScope_ChildLifetimeScopeBeginning(object sender, LifetimeScopeBeginningEventArgs e)
-        {
-            BackgroundJobContext.ParentBackgroundJobScope = sender as LifetimeScope;
-            BackgroundJobContext.CurrentLifetimeScope = e.LifetimeScope;
         }
     }
 }

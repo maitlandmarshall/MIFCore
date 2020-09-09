@@ -22,13 +22,18 @@ namespace MAD.Integration.Common.Http
 
         public void Configure(IApplicationBuilder app)
         {
+            var dashboardOptions = new DashboardOptions
+            {
+                DashboardTitle = $"{Assembly.GetEntryAssembly().GetName().Name} Dashboard"
+            };
+
             app.UseRouting();
             app.UseEndpoints(cfg => {
                 cfg.MapControllers();
-                cfg.MapHangfireDashboard();
+                cfg.MapHangfireDashboard(dashboardOptions);
             });
 
-            app.UseHangfireDashboard();
+            app.UseHangfireDashboard(options: dashboardOptions);
         }
     }
 }
