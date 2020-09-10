@@ -9,7 +9,7 @@ using System.Globalization;
 
 namespace MAD.Integration.Common.Jobs
 {
-    public class DisableMultipleQueuedItemsFilter : JobFilterAttribute, IClientFilter, IServerFilter, IApplyStateFilter
+    public class DisableIdenticalQueuedItemsFilter : JobFilterAttribute, IClientFilter, IServerFilter, IApplyStateFilter
     {
         private static readonly TimeSpan LockTimeout = TimeSpan.FromSeconds(5);
 
@@ -51,48 +51,42 @@ namespace MAD.Integration.Common.Jobs
             }
         }
 
-        public void OnStateUnapplied(ApplyStateContext context, IWriteOnlyTransaction transaction)
-        {
-
-        }
-
         private bool AddFingerprintIfNotExists(IStorageConnection connection, Job job)
         {
-            using (connection.AcquireDistributedLock(GetFingerprintLockKey(job), LockTimeout))
+            using var lck = connection.AcquireDistributedLock(GetFingerprintLockKey(job), LockTimeout);
+            
+            string fingerprintKey = GetFingerprintKey(job);
+            Dictionary<string, string> fingerprint = connection.GetAllEntriesFromHash(fingerprintKey);
+
+            if (fingerprint != null)
             {
-                string fingerprintKey = GetFingerprintKey(job);
-                Dictionary<string, string> fingerprint = connection.GetAllEntriesFromHash(fingerprintKey);
-
-                if (fingerprint != null)
+                if (fingerprint.ContainsKey("Timestamp")
+                    && DateTimeOffset.TryParse(fingerprint["Timestamp"], null, DateTimeStyles.RoundtripKind, out DateTimeOffset timestamp))
                 {
-                    if (fingerprint.ContainsKey("Timestamp")
-                        && DateTimeOffset.TryParse(fingerprint["Timestamp"], null, DateTimeStyles.RoundtripKind, out DateTimeOffset timestamp))
+                    if (this.FingerprintTimeoutMinutes > 0)
                     {
-                        if (this.FingerprintTimeoutMinutes > 0)
-                        {
-                            var timestampWithTimeout = timestamp.Add(TimeSpan.FromMinutes(FingerprintTimeoutMinutes));
+                        var timestampWithTimeout = timestamp.Add(TimeSpan.FromMinutes(FingerprintTimeoutMinutes));
 
-                            if (DateTimeOffset.UtcNow <= timestampWithTimeout)
-                            {
-                                return false;
-                            }
-                        }
-                        else
+                        if (DateTimeOffset.UtcNow <= timestampWithTimeout)
                         {
                             return false;
                         }
                     }
+                    else
+                    {
+                        return false;
+                    }
                 }
-
-                // Fingerprint does not exist, it is invalid (no `Timestamp` key),
-                // or it is not actual (timeout expired).
-                connection.SetRangeInHash(fingerprintKey, new Dictionary<string, string>
-                {
-                    { "Timestamp", DateTimeOffset.UtcNow.ToString("o") }
-                });
-
-                return true;
             }
+
+            // Fingerprint does not exist, it is invalid (no `Timestamp` key),
+            // or it is not actual (timeout expired).
+            connection.SetRangeInHash(fingerprintKey, new Dictionary<string, string>
+            {
+                { "Timestamp", DateTimeOffset.UtcNow.ToString("o") }
+            });
+
+            return true;
         }
 
         private void RemoveFingerprint(IStorageConnection connection, Job job)
@@ -109,44 +103,16 @@ namespace MAD.Integration.Common.Jobs
 
         private static string GetFingerprintLockKey(Job job)
         {
-            return string.Format("{0}:lock", GetFingerprintKey(job));
+            return string.Format("lck:{0}", job.GetFingerprint());
         }
 
         private static string GetFingerprintKey(Job job)
         {
-            return string.Format("fingerprint:{0}", GetFingerprint(job));
+            return string.Format("fpt:{0}", job.GetFingerprint());
         }
 
-        private static string GetFingerprint(Job job)
-        {
-            string parameters = string.Empty;
-
-            if (job.Args != null)
-            {
-                parameters = string.Join(".", job.Args);
-            }
-
-            if (job.Type == null || job.Method == null)
-            {
-                return string.Empty;
-            }
-
-            string fingerprint = string.Format(
-                "{0}.{1}.{2}",
-                job.Type.Name,
-                job.Method.Name, parameters);
-
-            return fingerprint;
-        }
-
-        void IClientFilter.OnCreated(CreatedContext filterContext)
-        {
-        }
-
-        void IServerFilter.OnPerforming(PerformingContext filterContext)
-        {
-        }
-
-
+        void IApplyStateFilter.OnStateUnapplied(ApplyStateContext context, IWriteOnlyTransaction transaction) { };
+        void IClientFilter.OnCreated(CreatedContext filterContext) { }
+        void IServerFilter.OnPerforming(PerformingContext filterContext) { }
     }
 }
