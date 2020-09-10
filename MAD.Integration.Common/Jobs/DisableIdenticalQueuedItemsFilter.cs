@@ -83,7 +83,9 @@ namespace MAD.Integration.Common.Jobs
             // or it is not actual (timeout expired).
             connection.SetRangeInHash(fingerprintKey, new Dictionary<string, string>
             {
-                { "Timestamp", DateTimeOffset.UtcNow.ToString("o") }
+                { "Timestamp", DateTimeOffset.UtcNow.ToString("o") },
+                { "MethodName", job.Method.Name },
+                { "TypeName", job.GetType().Name }
             });
 
             return true;
