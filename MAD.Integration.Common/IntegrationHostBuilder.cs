@@ -4,12 +4,16 @@ using Hangfire;
 using MAD.Integration.Common.Analytics;
 using MAD.Integration.Common.Hangfire;
 using MAD.Integration.Common.Http;
+using Microsoft.ApplicationInsights;
+using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -35,9 +39,8 @@ namespace MAD.Integration.Common
             ContainerBuilder containerBuilder = new ContainerBuilder();
             containerBuilder.Populate(this.serviceDescriptors);
 
-            IContainer rootContainer = containerBuilder.Build();
-
-            IHostBuilder hostBuilder = Host.CreateDefaultBuilder()
+            var rootContainer = containerBuilder.Build();
+            var hostBuilder = Host.CreateDefaultBuilder()
                 .UseWindowsService()
                 .ConfigureLogging(cfg =>
                 {
@@ -75,7 +78,6 @@ namespace MAD.Integration.Common
 
             return host;
         }
-
 
         private void HandleStartupConfigureServices()
         {
