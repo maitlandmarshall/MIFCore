@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,7 +12,10 @@ namespace MAD.Integration.Common.Analytics
     {
         public static IServiceCollection AddAppInsights(this IServiceCollection serviceDescriptors)
         {
-            serviceDescriptors.AddSingleton<AppInsightsConfig>();
+            var appInsightsConfig = new AppInsightsConfig();
+            IntegrationHost.DefaultConfiguration.Bind(appInsightsConfig);
+
+            serviceDescriptors.AddSingleton<AppInsightsConfig>(appInsightsConfig);
 
             return serviceDescriptors;
         }

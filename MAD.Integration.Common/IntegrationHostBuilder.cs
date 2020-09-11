@@ -4,6 +4,8 @@ using Hangfire;
 using MAD.Integration.Common.Analytics;
 using MAD.Integration.Common.Hangfire;
 using MAD.Integration.Common.Http;
+using MAD.Integration.Common.Jobs;
+using MAD.Integration.Common.Settings;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.AspNetCore.Hosting;
@@ -34,9 +36,10 @@ namespace MAD.Integration.Common
 
         public IHost Build()
         {
-            this.HandleStartupConfigureServices();
+            this.BuildSettingsFile();
+            this.InvokeStartupConfigureServices();
 
-            ContainerBuilder containerBuilder = new ContainerBuilder();
+            var containerBuilder = new ContainerBuilder();
             containerBuilder.Populate(this.serviceDescriptors);
 
             var rootContainer = containerBuilder.Build();
@@ -47,39 +50,68 @@ namespace MAD.Integration.Common
                     cfg.AddFilter("Microsoft.EntityFrameworkCore", LogLevel.Warning);
                     cfg.AddFilter("Hangfire", LogLevel.Error);
                 })
-                .UseServiceProviderFactory(new AutofacChildLifetimeScopeServiceProviderFactory(rootContainer));
+                .UseServiceProviderFactory(new AutofacChildLifetimeScopeServiceProviderFactory(rootContainer))
+                .ConfigureAppConfiguration(cfg =>
+                {
+                    cfg.Sources.Clear();
+                    cfg.AddConfiguration(IntegrationHost.DefaultConfiguration);
+                });
 
             if (rootContainer.TryResolve<AspNetCoreConfig>(out AspNetCoreConfig aspNetCoreConfig))
             {
-                hostBuilder.ConfigureWebHostDefaults(webHost =>
-                {
-                    webHost.UseStartup<WebHostStartup>();
-
-                    if (aspNetCoreConfig.BindingPort == 80 || aspNetCoreConfig.BindingPort == 443)
-                    {
-                        webHost.UseHttpSys(options =>
-                        {
-                            options.UrlPrefixes.Add($"http://*:{aspNetCoreConfig.BindingPort}");
-                        });
-                    }
-                    else
-                    {
-                        webHost.UseKestrel(options =>
-                        {
-                            options.ListenAnyIP(aspNetCoreConfig.BindingPort);
-                        });
-                    }
-                });
+                this.ConfigureAspNetCore(aspNetCoreConfig, hostBuilder);
             }
 
             IHost host = hostBuilder.Build();
 
-            this.HandleStartupConfigure(host.Services.GetService<IServiceProvider>());
+            this.InvokeStartupConfigure(host.Services.GetService<IServiceProvider>());
 
             return host;
         }
 
-        private void HandleStartupConfigureServices()
+        private void ConfigureAspNetCore(AspNetCoreConfig aspNetCoreConfig, IHostBuilder hostBuilder)
+        {
+            hostBuilder.ConfigureWebHostDefaults(webHost =>
+            {
+                webHost.UseStartup<WebHostStartup>();
+
+                if (aspNetCoreConfig.BindingPort == 80 || aspNetCoreConfig.BindingPort == 443)
+                {
+                    webHost.UseHttpSys(options =>
+                    {
+                        options.UrlPrefixes.Add($"http://*:{aspNetCoreConfig.BindingPort}");
+                    });
+                }
+                else
+                {
+                    webHost.UseKestrel(options =>
+                    {
+                        options.ListenAnyIP(aspNetCoreConfig.BindingPort);
+                    });
+                }
+            });
+        }
+
+        private void BuildSettingsFile()
+        {
+            var settingsPath = Path.Combine(Globals.BaseDirectory, "settings.json");
+            var defaultSettings = new FileInfo("settings.default.json");
+            var settings = new FileInfo(settingsPath);
+
+            if (!settings.Exists)
+            {
+                if (defaultSettings.Exists)
+                {
+                    defaultSettings.CopyTo(settingsPath);
+                }
+                else
+                {
+                    settings.Create().Dispose();
+                }
+            }
+        }
+
+        private void InvokeStartupConfigureServices()
         {
             if (this.startupRef is null)
                 return;
@@ -95,7 +127,7 @@ namespace MAD.Integration.Common
             }
         }
 
-        private void HandleStartupConfigure(IServiceProvider serviceProvider)
+        private void InvokeStartupConfigure(IServiceProvider serviceProvider)
         {
             if (this.startupRef is null)
                 return;
@@ -122,10 +154,9 @@ namespace MAD.Integration.Common
         }
 
         public IIntegrationHostBuilder UseHangfire() => this.UseHangfire(null);
-        public IIntegrationHostBuilder UseHangfire(Action<IGlobalConfiguration> configureDelegate)
+        public IIntegrationHostBuilder UseHangfire(Action<IGlobalConfiguration, HangfireConfig> configureDelegate)
         {
-            configureDelegate?.Invoke(GlobalConfiguration.Configuration);
-            this.ConfigureServices(y => y.AddHangfire());
+            this.ConfigureServices(y => y.AddHangfire(configureDelegate));
 
             return this;
         }
@@ -133,10 +164,7 @@ namespace MAD.Integration.Common
         public IIntegrationHostBuilder UseAspNetCore() => this.UseAspNetCore(null);
         public IIntegrationHostBuilder UseAspNetCore(Action<AspNetCoreConfig> configureDelegate)
         {
-            var config = new AspNetCoreConfig();
-            configureDelegate?.Invoke(config);
-
-            this.ConfigureServices(y => y.AddAspNetCore(config));
+            this.ConfigureServices(y => y.AddAspNetCore(configureDelegate));
 
             return this;
         }
