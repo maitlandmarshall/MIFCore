@@ -9,7 +9,7 @@ using System.Globalization;
 
 namespace MAD.Integration.Common.Jobs
 {
-    public class DisableIdenticalQueuedItemsFilter : JobFilterAttribute, IClientFilter, IServerFilter, IApplyStateFilter
+    public class DisableIdenticalQueuedItemsAttribute : JobFilterAttribute, IClientFilter, IServerFilter, IApplyStateFilter
     {
         private static readonly TimeSpan LockTimeout = TimeSpan.FromSeconds(100);
 
