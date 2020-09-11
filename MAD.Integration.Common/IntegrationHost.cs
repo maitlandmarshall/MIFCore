@@ -22,7 +22,7 @@ namespace MAD.Integration.Common
                     globalHangfireConfig
                         .UseSqlServerStorage(hangfireServiceConfig.ConnectionString, new SqlServerStorageOptions
                         {
-                            SchemaName = "jobs"
+                            SchemaName = "job"
                         })
                         .UseRecommendedSerializerSettings();
                 });

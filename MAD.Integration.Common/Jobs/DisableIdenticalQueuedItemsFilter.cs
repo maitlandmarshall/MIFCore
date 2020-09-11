@@ -11,7 +11,7 @@ namespace MAD.Integration.Common.Jobs
 {
     public class DisableIdenticalQueuedItemsFilter : JobFilterAttribute, IClientFilter, IServerFilter, IApplyStateFilter
     {
-        private static readonly TimeSpan LockTimeout = TimeSpan.FromSeconds(5);
+        private static readonly TimeSpan LockTimeout = TimeSpan.FromSeconds(100);
 
         public uint FingerprintTimeoutMinutes { get; set; } = 0;
         public bool IncludeFailedJobs { get; set; } = true;
@@ -85,7 +85,7 @@ namespace MAD.Integration.Common.Jobs
             {
                 { "Timestamp", DateTimeOffset.UtcNow.ToString("o") },
                 { "MethodName", job.Method.Name },
-                { "TypeName", job.GetType().Name }
+                { "TypeName", job.Type.Name }
             });
 
             return true;

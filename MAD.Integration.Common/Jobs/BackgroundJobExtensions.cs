@@ -1,5 +1,6 @@
 ﻿using Hangfire;
 using Hangfire.Common;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -56,10 +57,7 @@ namespace MAD.Integration.Common.Jobs
 
             if (args != null)
             {
-                foreach (var a in args)
-                {
-                    hashInputBytes.AddRange(GetHashBytes(a));
-                }
+                hashInputBytes.AddRange(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(args)));
             }
 
             using var sha384Hasher = SHA384.Create();
@@ -73,34 +71,6 @@ namespace MAD.Integration.Common.Jobs
 
             return builder.ToString();
 
-        }
-
-        private static IEnumerable<byte> GetHashBytes(object a)
-        {
-            var aType = a.GetType();
-            var aTypeCode = Type.GetTypeCode(aType);
-
-            switch (aTypeCode)
-            {
-                case TypeCode.Object:
-                    if (a is IEnumerable<object> aLst)
-                    {
-                        foreach (var aItem in aLst)
-                        {
-                            foreach (var b in GetHashBytes(aItem)) yield return b;
-                        }
-                    }
-                    else
-                    {
-                        foreach (var b in Encoding.UTF8.GetBytes(a.ToString())) yield return b;
-                    }
-
-                    break;
-
-                default:
-                    foreach (var b in Encoding.UTF8.GetBytes(a.ToString())) yield return b;
-                    break;
-            }
         }
     }
 }

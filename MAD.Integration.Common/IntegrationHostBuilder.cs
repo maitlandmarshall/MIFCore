@@ -36,7 +36,6 @@ namespace MAD.Integration.Common
 
         public IHost Build()
         {
-            this.BuildSettingsFile();
             this.InvokeStartupConfigureServices();
 
             var containerBuilder = new ContainerBuilder();
@@ -90,25 +89,6 @@ namespace MAD.Integration.Common
                     });
                 }
             });
-        }
-
-        private void BuildSettingsFile()
-        {
-            var settingsPath = Path.Combine(Globals.BaseDirectory, "settings.json");
-            var defaultSettings = new FileInfo("settings.default.json");
-            var settings = new FileInfo(settingsPath);
-
-            if (!settings.Exists)
-            {
-                if (defaultSettings.Exists)
-                {
-                    defaultSettings.CopyTo(settingsPath);
-                }
-                else
-                {
-                    settings.Create().Dispose();
-                }
-            }
         }
 
         private void InvokeStartupConfigureServices()
