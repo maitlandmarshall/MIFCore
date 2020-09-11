@@ -14,7 +14,7 @@
     <Description>Provides an IntegrationHost which allows you to build integrations using Hangfire and AspNetCore</Description>
     <AssemblyVersion>1.0.2.0</AssemblyVersion>
     <FileVersion>1.0.2.0</FileVersion>
-    <Version>1.0.3</Version>
+    <Version>1.0.4</Version>
   </PropertyGroup>
 
   <ItemGroup>
