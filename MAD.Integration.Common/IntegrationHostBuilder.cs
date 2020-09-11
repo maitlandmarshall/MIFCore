@@ -153,7 +153,19 @@ namespace MAD.Integration.Common
             return this;
         }
 
-        public IIntegrationHostBuilder UseHangfire() => this.UseHangfire(null);
+        public IIntegrationHostBuilder UseHangfire()
+        {
+            this.ConfigureServices(y => y.AddHangfire());
+
+            return this;
+        }
+
+        public IIntegrationHostBuilder UseHangfire(Action<IGlobalConfiguration> configureDelegate)
+        {
+            this.ConfigureServices(y => y.AddHangfire((cfg, svg) => configureDelegate(cfg)));
+
+            return this;
+        }
         public IIntegrationHostBuilder UseHangfire(Action<IGlobalConfiguration, HangfireConfig> configureDelegate)
         {
             this.ConfigureServices(y => y.AddHangfire(configureDelegate));

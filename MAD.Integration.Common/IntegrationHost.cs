@@ -1,14 +1,8 @@
 ﻿using Hangfire;
+using Hangfire.SqlServer;
 using MAD.Integration.Common.Settings;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using Hangfire.SqlServer;
-using System.Threading;
-using System.Threading.Tasks;
 
 [assembly: InternalsVisibleTo("MAD.Integration.Common.Tests")]
 namespace MAD.Integration.Common
@@ -20,10 +14,13 @@ namespace MAD.Integration.Common
         public static IIntegrationHostBuilder CreateDefaultBuilder()
         {
             return new IntegrationHostBuilder()
-                .UseHangfire((gc, cfg) =>
+                .UseHangfire((globalHangfireConfig, hangfireServiceConfig) =>
                 {
-                    gc
-                        .UseSqlServerStorage(cfg.ConnectionString, new SqlServerStorageOptions
+                    if (string.IsNullOrEmpty(hangfireServiceConfig.ConnectionString))
+                        return;
+
+                    globalHangfireConfig
+                        .UseSqlServerStorage(hangfireServiceConfig.ConnectionString, new SqlServerStorageOptions
                         {
                             SchemaName = "jobs"
                         })

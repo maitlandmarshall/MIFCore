@@ -15,6 +15,7 @@ namespace MAD.Integration.Common
         IIntegrationHostBuilder ConfigureServices(Action<IServiceCollection> configureDelegate);
 
         IIntegrationHostBuilder UseHangfire();
+        IIntegrationHostBuilder UseHangfire(Action<IGlobalConfiguration> configureDelegate);
         IIntegrationHostBuilder UseHangfire(Action<IGlobalConfiguration, HangfireConfig> configureDelegate);
 
         IIntegrationHostBuilder UseAspNetCore();
