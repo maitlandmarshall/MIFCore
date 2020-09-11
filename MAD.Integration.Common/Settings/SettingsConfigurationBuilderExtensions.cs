@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
 using System.IO;
 
 namespace MAD.Integration.Common.Settings
@@ -30,7 +31,10 @@ namespace MAD.Integration.Common.Settings
                 }
                 else
                 {
-                    settings.Create().Dispose();
+                    File.WriteAllText(settings.FullName, JsonConvert.SerializeObject(new { 
+                        ConnectionString = "",
+                        BindingPort = 666
+                    }));
                 }
             }
         }

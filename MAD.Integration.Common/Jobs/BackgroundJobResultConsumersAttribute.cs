@@ -12,7 +12,7 @@ namespace MAD.Integration.Common.Jobs
 {
     [AttributeUsage(AttributeTargets.Method)]
     public class ConsumerAttribute : Attribute { }
-    public class EnableBackgroundJobResultConsumersFilter : JobFilterAttribute, IServerFilter
+    public class BackgroundJobResultConsumersAttribute : JobFilterAttribute, IServerFilter
     {
         private Lazy<IEnumerable<MethodInfo>> consumers;
         private IEnumerable<MethodInfo> Consumers
@@ -20,7 +20,7 @@ namespace MAD.Integration.Common.Jobs
             get => this.consumers.Value;
         }
 
-        public EnableBackgroundJobResultConsumersFilter()
+        public BackgroundJobResultConsumersAttribute()
         {
             this.consumers = new Lazy<IEnumerable<MethodInfo>>(() =>
             {
