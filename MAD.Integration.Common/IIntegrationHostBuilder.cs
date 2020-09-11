@@ -1,5 +1,6 @@
 ﻿using Hangfire;
 using MAD.Integration.Common.Http;
+using MAD.Integration.Common.Jobs;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System;
@@ -14,7 +15,7 @@ namespace MAD.Integration.Common
         IIntegrationHostBuilder ConfigureServices(Action<IServiceCollection> configureDelegate);
 
         IIntegrationHostBuilder UseHangfire();
-        IIntegrationHostBuilder UseHangfire(Action<IGlobalConfiguration> configureDelegate);
+        IIntegrationHostBuilder UseHangfire(Action<IGlobalConfiguration, HangfireConfig> configureDelegate);
 
         IIntegrationHostBuilder UseAspNetCore();
         IIntegrationHostBuilder UseAspNetCore(Action<AspNetCoreConfig> configureDelegate);

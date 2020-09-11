@@ -113,7 +113,7 @@ namespace MAD.Integration.Common.Jobs
             return string.Format("fpt:{0}", job.GetFingerprint());
         }
 
-        void IApplyStateFilter.OnStateUnapplied(ApplyStateContext context, IWriteOnlyTransaction transaction) { };
+        void IApplyStateFilter.OnStateUnapplied(ApplyStateContext context, IWriteOnlyTransaction transaction) { }
         void IClientFilter.OnCreated(CreatedContext filterContext) { }
         void IServerFilter.OnPerforming(PerformingContext filterContext) { }
     }
