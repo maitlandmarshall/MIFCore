@@ -1,5 +1,6 @@
 ﻿using Autofac;
 using Hangfire;
+using Hangfire.Common;
 using MAD.Integration.Common.Analytics;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.DependencyCollector;
@@ -36,12 +37,13 @@ namespace MAD.Integration.Common.Jobs
                 Queues = new[] { JobQueue.Alpha, JobQueue.Beta, JobQueue.Default, JobQueue.Low }
             };
 
-            this.globalConfig.UseFilter<BackgroundJobContext>(new BackgroundJobContext());
+            this.globalConfig
+                .UseFilter(new BackgroundJobContext());
 
             if (!string.IsNullOrEmpty(appInsights?.InstrumentationKey))
             {
                 var telemetryClient = new TelemetryClient(TelemetryConfigurationFactory.Create(appInsights));
-                this.globalConfig.UseFilter<AppInsightsEventsFilter>(new AppInsightsEventsFilter(telemetryClient));
+                this.globalConfig.UseFilter(new AppInsightsEventsFilter(telemetryClient));
             }
 
             using (var server = new BackgroundJobServer(options))

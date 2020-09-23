@@ -12,7 +12,8 @@ namespace MAD.Integration.Common.Settings
 
             builder
                 .SetBasePath(Globals.BaseDirectory)
-                .AddJsonFile("settings.json", optional: true);
+                .AddJsonFile("settings.json", optional: false)
+                .AddJsonFile("settings.default.json", optional: true);
 
             return builder;
         }
@@ -20,22 +21,16 @@ namespace MAD.Integration.Common.Settings
         private static void BuildSettingsFile()
         {
             var settingsPath = Path.Combine(Globals.BaseDirectory, "settings.json");
-            var defaultSettings = new FileInfo("settings.default.json");
             var settings = new FileInfo(settingsPath);
 
             if (!settings.Exists)
             {
-                if (defaultSettings.Exists)
+                File.WriteAllText(settings.FullName, JsonConvert.SerializeObject(new
                 {
-                    defaultSettings.CopyTo(settingsPath);
-                }
-                else
-                {
-                    File.WriteAllText(settings.FullName, JsonConvert.SerializeObject(new { 
-                        ConnectionString = "",
-                        BindingPort = 666
-                    }));
-                }
+                    ConnectionString = "",
+                    BindingPort = 666,
+                    InstrumentationKey = ""
+                }));
             }
         }
     }

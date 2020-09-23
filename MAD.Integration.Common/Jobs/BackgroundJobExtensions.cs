@@ -70,7 +70,11 @@ namespace MAD.Integration.Common.Jobs
             }
 
             return builder.ToString();
+        }
 
+        public static DateTime? GetLastSuccess(this BackgroundJob job)
+        {
+            return job.GetJobParameter<DateTime?>(TrackLastSuccessAttribute.ParameterName);
         }
     }
 }

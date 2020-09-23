@@ -27,16 +27,18 @@ namespace MAD.Integration.Common
         private object startupRef;
 
         private readonly IServiceCollection serviceDescriptors = new ServiceCollection();
+        private readonly List<Action<IServiceCollection>> configureServiceActions = new List<Action<IServiceCollection>>();
 
         public IIntegrationHostBuilder ConfigureServices(Action<IServiceCollection> configureDelegate)
         {
-            configureDelegate(this.serviceDescriptors);
+            this.configureServiceActions.Add(configureDelegate);
             return this;
         }
 
         public IHost Build()
         {
-            this.InvokeStartupConfigureServices();
+            this.AddStartupConfigureServices();
+            this.InvokeConfigureServiceActions();
 
             var containerBuilder = new ContainerBuilder();
             containerBuilder.Populate(this.serviceDescriptors);
@@ -68,6 +70,14 @@ namespace MAD.Integration.Common
             return host;
         }
 
+        private void InvokeConfigureServiceActions()
+        {
+            foreach (var configServices in this.configureServiceActions)
+            {
+                configServices(this.serviceDescriptors);
+            }
+        }
+
         private void ConfigureAspNetCore(AspNetCoreConfig aspNetCoreConfig, IHostBuilder hostBuilder)
         {
             hostBuilder.ConfigureWebHostDefaults(webHost =>
@@ -91,7 +101,7 @@ namespace MAD.Integration.Common
             });
         }
 
-        private void InvokeStartupConfigureServices()
+        private void AddStartupConfigureServices()
         {
             if (this.startupRef is null)
                 return;

@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace MAD.Integration.Common.Jobs
 {
-    public class BackgroundJobContext : JobFilterAttribute, IServerFilter
+    public class BackgroundJobContext : IServerFilter
     {
         public static PerformContext Current
         {
