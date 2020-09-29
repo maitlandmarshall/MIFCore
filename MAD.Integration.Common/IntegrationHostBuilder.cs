@@ -171,9 +171,11 @@ namespace MAD.Integration.Common
             return this;
         }
 
-        public IIntegrationHostBuilder UseAppInsights()
+        public IIntegrationHostBuilder UseAppInsights() => this.UseAppInsights(null);
+
+        public IIntegrationHostBuilder UseAppInsights(Action<AppInsightsConfig> configureDelegate)
         {
-            this.ConfigureServices(y => y.AddAppInsights());
+            this.ConfigureServices(y => y.AddAppInsights(configureDelegate));
 
             return this;
         }

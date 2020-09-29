@@ -11,13 +11,8 @@ using System.Collections.Generic;
 
 namespace MAD.Integration.Common.Jobs
 {
-    public class BatchContextAttribute : JobFilterAttribute, IClientFilter, IServerFilter
+    public class BatchContextFilter : IClientFilter, IServerFilter
     {
-        public BatchContextAttribute()
-        {
-            this.Order = 100;
-        }
-
         public void OnPerforming(PerformingContext filterContext)
         {
             var ctxIdJobParam = filterContext.GetBatchParameter<string>("Id");

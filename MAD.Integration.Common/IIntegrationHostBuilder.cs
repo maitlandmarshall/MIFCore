@@ -1,4 +1,5 @@
 ﻿using Hangfire;
+using MAD.Integration.Common.Analytics;
 using MAD.Integration.Common.Http;
 using MAD.Integration.Common.Jobs;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,6 +23,7 @@ namespace MAD.Integration.Common
         IIntegrationHostBuilder UseAspNetCore(Action<AspNetCoreConfig> configureDelegate);
 
         IIntegrationHostBuilder UseAppInsights();
+        IIntegrationHostBuilder UseAppInsights(Action<AppInsightsConfig> configureDelegate);
 
         IHost Build();
     }

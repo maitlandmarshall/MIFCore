@@ -1,4 +1,5 @@
-﻿using Hangfire.Common;
+﻿using Hangfire;
+using Hangfire.Common;
 using Hangfire.Server;
 using Hangfire.States;
 using Hangfire.Storage;
@@ -13,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace MAD.Integration.Common.Analytics
 {
-    public class AppInsightsEventsFilter : JobFilterAttribute, IServerFilter
+    public class AppInsightsEventsFilter : JobFilterAttribute, IServerFilter, IApplyStateFilter
     {
         [ThreadStatic]
         private static IOperationHolder<RequestTelemetry> operationHolder;
@@ -25,14 +26,29 @@ namespace MAD.Integration.Common.Analytics
             this.telemetryClient = telemetryClient;
         }
 
+        private void SetTelemetryProperties(IDictionary<string, string> props, BackgroundJob backgroundJob)
+        {
+            props.Add("jobName", this.GetJobName(backgroundJob));
+            props.Add("arguments", this.GetJobArguments(backgroundJob));
+        }
+
+        private string GetJobName(BackgroundJob backgroundJob)
+        {
+            return $"{backgroundJob.Job.Type.Name}.{backgroundJob.Job.Method.Name}";
+        }
+
+        private string GetJobArguments(BackgroundJob backgroundJob)
+        {
+            return JsonConvert.SerializeObject(backgroundJob.Job.Args);
+        }
+
         void IServerFilter.OnPerforming(PerformingContext filterContext)
         {
-            operationHolder = this.telemetryClient.StartOperation<RequestTelemetry>($"{filterContext.BackgroundJob.Job.Type.Name}.{filterContext.BackgroundJob.Job.Method.Name}");
-            operationHolder.Telemetry.Properties.Add("arguments", JsonConvert.SerializeObject(filterContext.BackgroundJob.Job.Args));
+            operationHolder = this.telemetryClient.StartOperation<RequestTelemetry>(this.GetJobName(filterContext.BackgroundJob));
+            operationHolder.Telemetry.Properties.Add("arguments", this.GetJobArguments(filterContext.BackgroundJob));
 
             var eventTelemetry = new EventTelemetry("Job Started");
-            eventTelemetry.Properties.Add("jobName", $"{filterContext.BackgroundJob.Job.Type.Name}.{filterContext.BackgroundJob.Job.Method.Name}");
-            eventTelemetry.Properties.Add("arguments", JsonConvert.SerializeObject(filterContext.BackgroundJob.Job.Args));
+            this.SetTelemetryProperties(eventTelemetry.Properties, filterContext.BackgroundJob);
             eventTelemetry.Context.Operation.Id = operationHolder.Telemetry.Context.Operation.Id;
 
             this.telemetryClient.TrackEvent(eventTelemetry);   
@@ -41,8 +57,7 @@ namespace MAD.Integration.Common.Analytics
         void IServerFilter.OnPerformed(PerformedContext filterContext)
         {
             var eventTelemetry = new EventTelemetry();
-            eventTelemetry.Properties.Add("jobName", $"{filterContext.BackgroundJob.Job.Type.Name}.{filterContext.BackgroundJob.Job.Method.Name}");
-            eventTelemetry.Properties.Add("arguments", JsonConvert.SerializeObject(filterContext.BackgroundJob.Job.Args));
+            this.SetTelemetryProperties(eventTelemetry.Properties, filterContext.BackgroundJob);
             eventTelemetry.Context.Operation.Id = operationHolder.Telemetry.Context.Operation.Id;
 
             if (filterContext.Exception != null)
@@ -50,21 +65,22 @@ namespace MAD.Integration.Common.Analytics
                 var exception = filterContext.Exception;
                 if (exception is JobPerformanceException perfEx)
                 {
-                    exception ??= perfEx.InnerException;
+                    exception = perfEx.InnerException;
                 }
 
                 var exceptionTelemetry = new ExceptionTelemetry
                 {
                     Exception = exception
                 };
-                exceptionTelemetry.Properties.Add("jobName", $"{filterContext.BackgroundJob.Job.Type.Name}.{filterContext.BackgroundJob.Job.Method.Name}");
-                exceptionTelemetry.Properties.Add("arguments", JsonConvert.SerializeObject(filterContext.BackgroundJob.Job.Args));
+                
+                this.SetTelemetryProperties(exceptionTelemetry.Properties, filterContext.BackgroundJob);
                 exceptionTelemetry.Context.Operation.Id = operationHolder.Telemetry.Context.Operation.Id;
-                this.telemetryClient.TrackException(exceptionTelemetry);
 
+                this.telemetryClient.TrackException(exceptionTelemetry);
                 operationHolder.Telemetry.Success = false;
-                operationHolder.Telemetry.ResponseCode = "500";
-                eventTelemetry.Name = "Job Failed";
+                operationHolder.Telemetry.ResponseCode = "Attempt Failed";
+
+                eventTelemetry.Name = "Job Attempt Failed";
             }
             else
             {
@@ -72,10 +88,35 @@ namespace MAD.Integration.Common.Analytics
             }
 
             this.telemetryClient.TrackEvent(eventTelemetry);
-            this.telemetryClient.StopOperation(operationHolder);
-
-            operationHolder.Dispose();
-            operationHolder = null;
         }
+
+        public void OnStateApplied(ApplyStateContext context, IWriteOnlyTransaction transaction)
+        {
+            try
+            {
+                if (context.NewState.Name != FailedState.StateName) return;
+
+                operationHolder.Telemetry.Success = false;
+                operationHolder.Telemetry.ResponseCode = "Failed";
+
+                var eventTelemetry = new EventTelemetry("Job Failed");
+                this.SetTelemetryProperties(eventTelemetry.Properties, context.BackgroundJob);
+                eventTelemetry.Context.Operation.Id = operationHolder.Telemetry.Context.Operation.Id;
+
+                this.telemetryClient.TrackEvent(eventTelemetry);
+            }
+            finally
+            {
+                if (operationHolder != null)
+                {
+                    this.telemetryClient.StopOperation(operationHolder);
+
+                    operationHolder.Dispose();
+                    operationHolder = null;
+                }
+            }  
+        }
+
+        public void OnStateUnapplied(ApplyStateContext context, IWriteOnlyTransaction transaction) { }
     }
 }

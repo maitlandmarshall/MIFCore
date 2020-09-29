@@ -76,7 +76,7 @@ namespace MAD.Integration.Common.Tests
         public async Task SetBatchParameter_NestedJob_ValuesIntact()
         {
             var host = IntegrationHost.CreateDefaultBuilder()
-                .UseHangfire(cfg => cfg.UseMemoryStorage().UseFilter(new BatchContextAttribute()))
+                .UseHangfire(cfg => cfg.UseMemoryStorage().UseFilter(new BatchContextFilter()))
                 .Build();
 
             BackgroundJob.Enqueue(() => RootJob());
