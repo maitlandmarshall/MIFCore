@@ -88,7 +88,7 @@ namespace MAD.Integration.Common
                 {
                     webHost.UseHttpSys(options =>
                     {
-                        options.UrlPrefixes.Add($"http://*:{aspNetCoreConfig.BindingPort}");
+                        options.UrlPrefixes.Add($"http://*:{aspNetCoreConfig.BindingPort}/{aspNetCoreConfig.BindingPath}");
                     });
                 }
                 else

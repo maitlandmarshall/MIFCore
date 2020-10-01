@@ -20,12 +20,14 @@ namespace MAD.Integration.Common.Http
                 .AddApplicationPart(Assembly.GetEntryAssembly());
         }
 
-        public void Configure(IApplicationBuilder app)
+        public void Configure(IApplicationBuilder app, AspNetCoreConfig aspNetCoreConfig)
         {
             var dashboardOptions = new DashboardOptions
             {
                 DashboardTitle = $"{Assembly.GetEntryAssembly().GetName().Name} Dashboard"
             };
+
+            if (!string.IsNullOrEmpty(aspNetCoreConfig.BindingPath)) app.UsePathBase($"/{aspNetCoreConfig.BindingPath}");
 
             app.UseRouting();
             app.UseEndpoints(cfg => {
