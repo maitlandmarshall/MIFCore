@@ -27,5 +27,23 @@ namespace MAD.Integration.Common.Jobs
             if (newJob.LastExecution is null)
                 RecurringJob.Trigger(jobName);
         }
+
+        public static void CreateRecurringJob(string jobName, Expression<Func<Task>> methodCall, string cronSchedule = null)
+        {
+            cronSchedule ??= Cron.Daily(22, 30);
+
+            var connection = JobStorage.Current.GetConnection();
+
+            RecurringJob.AddOrUpdate(
+                recurringJobId: jobName,
+                methodCall: methodCall,
+                cronExpression: cronSchedule,
+                timeZone: TimeZoneInfo.Local);
+
+            RecurringJobDto newJob = connection.GetRecurringJobs(new string[] { jobName }).First();
+
+            if (newJob.LastExecution is null)
+                RecurringJob.Trigger(jobName);
+        }
     }
 }

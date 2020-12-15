@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace MAD.Integration.Common.Analytics
 {
-    public class AppInsightsEventsFilter : JobFilterAttribute, IServerFilter, IApplyStateFilter
+    public class AppInsightsEventsFilter : IServerFilter, IApplyStateFilter
     {
         [ThreadStatic]
         private static IOperationHolder<RequestTelemetry> operationHolder;
