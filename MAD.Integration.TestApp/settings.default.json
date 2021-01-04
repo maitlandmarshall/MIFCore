@@ -1,5 +1,5 @@
 {
   "bindingPath": "test",
   "bindingPort":  80,
-  "connectionString": "Server=ZPC,1433;Initial Catalog=IntegrationTest;Persist Security Info=False;User ID=sa;Password=ILikeCheese;MultipleActiveResultSets=False;Connection Timeout=30;"
+  "connectionString": null
 }

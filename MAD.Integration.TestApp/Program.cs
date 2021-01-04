@@ -9,7 +9,6 @@ namespace MAD.Integration.TestApp
         static void Main(string[] args)
         {
             var host = IntegrationHost.CreateDefaultBuilder()
-                .UseAspNetCore()
                 .Build();
 
             host.Run();

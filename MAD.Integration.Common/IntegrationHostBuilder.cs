@@ -40,10 +40,7 @@ namespace MAD.Integration.Common
             this.AddStartupConfigureServices();
             this.InvokeConfigureServiceActions();
 
-            var containerBuilder = new ContainerBuilder();
-            containerBuilder.Populate(this.serviceDescriptors);
-
-            var rootContainer = containerBuilder.Build();
+            var serviceProviderFactory = new AutofacServiceProviderFactory(builder => builder.Populate(this.serviceDescriptors));
             var hostBuilder = Host.CreateDefaultBuilder()
                 .UseWindowsService()
                 .ConfigureLogging(cfg =>
@@ -51,20 +48,19 @@ namespace MAD.Integration.Common
                     cfg.AddFilter("Microsoft.EntityFrameworkCore", LogLevel.Warning);
                     cfg.AddFilter("Hangfire", LogLevel.Error);
                 })
-                .UseServiceProviderFactory(new AutofacChildLifetimeScopeServiceProviderFactory(rootContainer))
+                .UseServiceProviderFactory(serviceProviderFactory)
                 .ConfigureAppConfiguration(cfg =>
                 {
                     cfg.Sources.Clear();
                     cfg.AddConfiguration(IntegrationHost.DefaultConfiguration);
                 });
 
-            if (rootContainer.TryResolve<AspNetCoreConfig>(out AspNetCoreConfig aspNetCoreConfig))
-            {
-                this.ConfigureAspNetCore(aspNetCoreConfig, hostBuilder);
-            }
+            // Has AspNetCoreConfig been added through IntegrationHostBuilder.UseAspNetCore()?
+            // If it has, extract the singleton instance & extend the host builder with WebHostDefaults
+            var aspNetCoreConfigDescriptor = this.serviceDescriptors.FirstOrDefault(y => y.ServiceType == typeof(AspNetCoreConfig));
+            if (aspNetCoreConfigDescriptor != null) this.ConfigureAspNetCore(aspNetCoreConfigDescriptor.ImplementationInstance as AspNetCoreConfig, hostBuilder);
 
             IHost host = hostBuilder.Build();
-
             this.InvokeStartupConfigure(host.Services.GetService<IServiceProvider>());
 
             return host;
