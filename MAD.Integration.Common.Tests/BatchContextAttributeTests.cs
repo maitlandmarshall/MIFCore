@@ -81,7 +81,7 @@ namespace MAD.Integration.Common.Tests
 
             BackgroundJob.Enqueue(() => RootJob());
 
-            _ = host.RunAsync();
+            await host.StartAsync();
 
             var result = await taskCompletionSource.Task;
             Assert.IsTrue(result);

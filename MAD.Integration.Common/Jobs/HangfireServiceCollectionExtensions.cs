@@ -11,13 +11,12 @@ namespace MAD.Integration.Common.Hangfire
         public static IServiceCollection AddHangfire(this IServiceCollection serviceDescriptors, Action<IGlobalConfiguration, HangfireConfig> configureDelegate = null)
         {
             serviceDescriptors.AddHostedService<HangfireBackgroundService>();
-            serviceDescriptors.AddSingleton<IGlobalConfiguration>(sp => GlobalConfiguration.Configuration);
 
             var hangfireConfig = new HangfireConfig();
             IntegrationHost.DefaultConfiguration.Bind(hangfireConfig);
             serviceDescriptors.AddSingleton(hangfireConfig);
 
-            configureDelegate?.Invoke(GlobalConfiguration.Configuration, hangfireConfig);
+            serviceDescriptors.AddHangfire(configuration: cfg => configureDelegate?.Invoke(cfg, hangfireConfig));
 
             return serviceDescriptors;
         }
