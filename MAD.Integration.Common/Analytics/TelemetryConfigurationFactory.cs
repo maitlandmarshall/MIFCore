@@ -26,9 +26,6 @@ namespace MAD.Integration.Common.Analytics
             quickPulse.Initialize(teleConfig);
             quickPulse.RegisterTelemetryProcessor(quickPulseTelemetryProcessor);
 
-            var depModule = BuildDependencyTrackingTelemetryModule();
-            depModule.Initialize(teleConfig);
-
             return teleConfig;
         }
 
