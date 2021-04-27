@@ -1,13 +1,9 @@
-﻿using Autofac;
-using Autofac.Extensions.DependencyInjection;
+﻿using Autofac.Extensions.DependencyInjection;
 using Hangfire;
 using MAD.Integration.Common.Analytics;
 using MAD.Integration.Common.Hangfire;
 using MAD.Integration.Common.Http;
 using MAD.Integration.Common.Jobs;
-using MAD.Integration.Common.Settings;
-using Microsoft.ApplicationInsights;
-using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,25 +11,26 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 
 namespace MAD.Integration.Common
 {
-    public partial class IntegrationHostBuilder : IIntegrationHostBuilder
+    public partial class IntegrationHostBuilder : IIntegrationHostBuilder, IHostBuilder
     {
         private object startupRef;
 
         private readonly IServiceCollection serviceDescriptors = new ServiceCollection();
         private readonly List<Action<IServiceCollection>> configureServiceActions = new List<Action<IServiceCollection>>();
+        private readonly IHostBuilder hostBuilder;
 
-        public IIntegrationHostBuilder ConfigureServices(Action<IServiceCollection> configureDelegate)
+        public IntegrationHostBuilder()
         {
-            this.configureServiceActions.Add(configureDelegate);
-            return this;
+            this.hostBuilder = Host.CreateDefaultBuilder();
         }
+
+        public IDictionary<object, object> Properties { get; }
 
         public IHost Build()
         {
@@ -41,7 +38,7 @@ namespace MAD.Integration.Common
             this.InvokeConfigureServiceActions();
 
             var serviceProviderFactory = new AutofacServiceProviderFactory(builder => builder.Populate(this.serviceDescriptors));
-            var hostBuilder = Host.CreateDefaultBuilder()
+            this.hostBuilder
                 .UseWindowsService()
                 .ConfigureLogging(cfg =>
                 {
@@ -58,12 +55,103 @@ namespace MAD.Integration.Common
             // Has AspNetCoreConfig been added through IntegrationHostBuilder.UseAspNetCore()?
             // If it has, extract the singleton instance & extend the host builder with WebHostDefaults
             var aspNetCoreConfigDescriptor = this.serviceDescriptors.FirstOrDefault(y => y.ServiceType == typeof(AspNetCoreConfig));
-            if (aspNetCoreConfigDescriptor != null) this.ConfigureAspNetCore(aspNetCoreConfigDescriptor.ImplementationInstance as AspNetCoreConfig, hostBuilder);
+            if (aspNetCoreConfigDescriptor != null) this.ConfigureAspNetCore(aspNetCoreConfigDescriptor.ImplementationInstance as AspNetCoreConfig, this.hostBuilder);
 
-            IHost host = hostBuilder.Build();
+            IHost host = this.hostBuilder.Build();
             this.InvokeStartupConfigure(host.Services.GetService<IServiceProvider>());
 
             return host;
+        }
+
+        public IIntegrationHostBuilder ConfigureServices(Action<IServiceCollection> configureDelegate)
+        {
+            this.configureServiceActions.Add(configureDelegate);
+            return this;
+        }
+
+        public IIntegrationHostBuilder UseStartup<TStartup>() where TStartup : class, new()
+        {
+            this.startupRef = new TStartup();
+            return this;
+        }
+
+        public IIntegrationHostBuilder UseHangfire()
+        {
+            this.ConfigureServices(y => y.AddHangfire());
+
+            return this;
+        }
+
+        public IIntegrationHostBuilder UseHangfire(Action<IGlobalConfiguration> configureDelegate)
+        {
+            this.ConfigureServices(y => y.AddHangfire((cfg, svg) => configureDelegate(cfg)));
+
+            return this;
+        }
+        public IIntegrationHostBuilder UseHangfire(Action<IGlobalConfiguration, HangfireConfig> configureDelegate)
+        {
+            this.ConfigureServices(y => y.AddHangfire(configureDelegate));
+
+            return this;
+        }
+
+        public IIntegrationHostBuilder UseAspNetCore()
+        {
+            return this.UseAspNetCore(null);
+        }
+
+        public IIntegrationHostBuilder UseAspNetCore(Action<AspNetCoreConfig> configureDelegate)
+        {
+            this.ConfigureServices(y => y.AddAspNetCore(configureDelegate));
+
+            return this;
+        }
+
+        public IIntegrationHostBuilder UseAppInsights()
+        {
+            return this.UseAppInsights(null);
+        }
+
+        public IIntegrationHostBuilder UseAppInsights(Action<AppInsightsConfig> configureDelegate)
+        {
+            this.ConfigureServices(y => y.AddAppInsights(configureDelegate));
+
+            return this;
+        }
+
+        public IHostBuilder ConfigureHostConfiguration(Action<IConfigurationBuilder> configureDelegate)
+        {
+            this.hostBuilder.ConfigureHostConfiguration(configureDelegate);
+            return this;
+        }
+
+        public IHostBuilder ConfigureAppConfiguration(Action<HostBuilderContext, IConfigurationBuilder> configureDelegate)
+        {
+            this.hostBuilder.ConfigureAppConfiguration(configureDelegate);
+            return this;
+        }
+
+        public IHostBuilder ConfigureServices(Action<HostBuilderContext, IServiceCollection> configureDelegate)
+        {
+            var hostBuilderContext = new HostBuilderContext(this.Properties);
+            this.configureServiceActions.Add((svc) => configureDelegate(hostBuilderContext, svc));
+            return this;
+        }
+
+        public IHostBuilder UseServiceProviderFactory<TContainerBuilder>(IServiceProviderFactory<TContainerBuilder> factory)
+        {
+            throw new NotSupportedException();
+        }
+
+        public IHostBuilder UseServiceProviderFactory<TContainerBuilder>(Func<HostBuilderContext, IServiceProviderFactory<TContainerBuilder>> factory)
+        {
+            throw new NotSupportedException();
+        }
+
+        public IHostBuilder ConfigureContainer<TContainerBuilder>(Action<HostBuilderContext, TContainerBuilder> configureDelegate)
+        {
+            this.hostBuilder.ConfigureContainer<TContainerBuilder>(configureDelegate);
+            return this;
         }
 
         private void InvokeConfigureServiceActions()
@@ -132,50 +220,5 @@ namespace MAD.Integration.Common
                     t.Wait();
             }
         }
-
-        public IIntegrationHostBuilder UseStartup<TStartup>() where TStartup : class, new()
-        {
-            this.startupRef = new TStartup();
-            return this;
-        }
-
-        public IIntegrationHostBuilder UseHangfire()
-        {
-            this.ConfigureServices(y => y.AddHangfire());
-
-            return this;
-        }
-
-        public IIntegrationHostBuilder UseHangfire(Action<IGlobalConfiguration> configureDelegate)
-        {
-            this.ConfigureServices(y => y.AddHangfire((cfg, svg) => configureDelegate(cfg)));
-
-            return this;
-        }
-        public IIntegrationHostBuilder UseHangfire(Action<IGlobalConfiguration, HangfireConfig> configureDelegate)
-        {
-            this.ConfigureServices(y => y.AddHangfire(configureDelegate));
-
-            return this;
-        }
-
-        public IIntegrationHostBuilder UseAspNetCore() => this.UseAspNetCore(null);
-        public IIntegrationHostBuilder UseAspNetCore(Action<AspNetCoreConfig> configureDelegate)
-        {
-            this.ConfigureServices(y => y.AddAspNetCore(configureDelegate));
-
-            return this;
-        }
-
-        public IIntegrationHostBuilder UseAppInsights() => this.UseAppInsights(null);
-
-        public IIntegrationHostBuilder UseAppInsights(Action<AppInsightsConfig> configureDelegate)
-        {
-            this.ConfigureServices(y => y.AddAppInsights(configureDelegate));
-
-            return this;
-        }
-
-
     }
 }
