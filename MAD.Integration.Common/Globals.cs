@@ -10,12 +10,7 @@ namespace MAD.Integration.Common
     {
         public static string BaseDirectory
         {
-            get => Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
-        }
-
-        public static string SettingsDirectory
-        {
-            get => Path.Combine(BaseDirectory, "settings");
+            get => Path.GetDirectoryName(AppContext.BaseDirectory);
         }
     }
 }
