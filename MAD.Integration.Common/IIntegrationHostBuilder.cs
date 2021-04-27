@@ -10,7 +10,7 @@ using System.Text;
 
 namespace MAD.Integration.Common
 {
-    public interface IIntegrationHostBuilder
+    public interface IIntegrationHostBuilder : IHostBuilder
     {
         IIntegrationHostBuilder UseStartup<TStartup>() where TStartup : class, new();
         IIntegrationHostBuilder ConfigureServices(Action<IServiceCollection> configureDelegate);
@@ -24,7 +24,5 @@ namespace MAD.Integration.Common
 
         IIntegrationHostBuilder UseAppInsights();
         IIntegrationHostBuilder UseAppInsights(Action<AppInsightsConfig> configureDelegate);
-
-        IHost Build();
     }
 }

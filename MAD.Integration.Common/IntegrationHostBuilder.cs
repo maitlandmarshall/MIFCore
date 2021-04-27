@@ -17,7 +17,7 @@ using System.Threading.Tasks;
 
 namespace MAD.Integration.Common
 {
-    public partial class IntegrationHostBuilder : IIntegrationHostBuilder, IHostBuilder
+    public partial class IntegrationHostBuilder : IIntegrationHostBuilder
     {
         private object startupRef;
 
