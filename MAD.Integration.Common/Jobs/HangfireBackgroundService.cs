@@ -18,13 +18,15 @@ namespace MAD.Integration.Common.Jobs
     {
         private readonly ILifetimeScope rootScope;
         private readonly IGlobalConfiguration globalConfig;
+        private readonly HangfireConfig hangfireConfig;
 
         internal static ILifetimeScope ServiceScope { get; private set; }
 
-        public HangfireBackgroundService(ILifetimeScope rootScope, IGlobalConfiguration config)
+        public HangfireBackgroundService(ILifetimeScope rootScope, IGlobalConfiguration config, HangfireConfig hangfireConfig)
         {
             this.rootScope = rootScope;
             this.globalConfig = config;
+            this.hangfireConfig = hangfireConfig;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -35,7 +37,7 @@ namespace MAD.Integration.Common.Jobs
             var options = new BackgroundJobServerOptions()
             {
                 Activator = activator,
-                Queues = new[] { JobQueue.Alpha, JobQueue.Beta, JobQueue.Default, JobQueue.Low }
+                Queues = this.hangfireConfig.Queues ?? new[] { JobQueue.Alpha, JobQueue.Beta, JobQueue.Default, JobQueue.Low }
             };
 
             this.globalConfig

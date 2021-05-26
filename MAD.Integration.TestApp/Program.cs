@@ -9,6 +9,7 @@ namespace MAD.Integration.TestApp
         static void Main(string[] args)
         {
             var host = IntegrationHost.CreateDefaultBuilder()
+                .UseStartup<Startup>()
                 .Build();
 
             host.Run();

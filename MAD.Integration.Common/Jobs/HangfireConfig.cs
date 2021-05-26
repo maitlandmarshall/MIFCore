@@ -8,5 +8,6 @@ namespace MAD.Integration.Common.Jobs
     public class HangfireConfig
     {
         public string ConnectionString { get; set; }
+        public string[] Queues { get; set; }
     }
 }
