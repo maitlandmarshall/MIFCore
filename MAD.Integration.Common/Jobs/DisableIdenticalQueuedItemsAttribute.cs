@@ -13,6 +13,11 @@ namespace MAD.Integration.Common.Jobs
     {
         private static readonly TimeSpan LockTimeout = TimeSpan.FromSeconds(100);
 
+        public DisableIdenticalQueuedItemsAttribute()
+        {
+            this.Order = int.MaxValue;
+        }
+
         public uint FingerprintTimeoutMinutes { get; set; } = 0;
         public bool IncludeFailedJobs { get; set; } = true;
 
