@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
+using System.Diagnostics;
 using System.IO;
 
 namespace MAD.Integration.Common.Settings

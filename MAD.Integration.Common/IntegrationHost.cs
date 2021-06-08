@@ -14,7 +14,7 @@ namespace MAD.Integration.Common
     {
         internal static IConfiguration DefaultConfiguration { get; } = new ConfigurationBuilder().UseSettingsFile().Build();
 
-        public static IIntegrationHostBuilder CreateDefaultBuilder()
+        public static IIntegrationHostBuilder CreateDefaultBuilder(string[] args)
         {
             JsonConvert.DefaultSettings = () => new JsonSerializerSettings
             {
@@ -22,7 +22,7 @@ namespace MAD.Integration.Common
                 ContractResolver = new CamelCasePropertyNamesContractResolver()
             };
 
-            return new IntegrationHostBuilder()
+            return new IntegrationHostBuilder(args)
                 .UseHangfire((globalHangfireConfig, hangfireServiceConfig) =>
                 {
                     if (string.IsNullOrEmpty(hangfireServiceConfig.ConnectionString))
@@ -38,6 +38,8 @@ namespace MAD.Integration.Common
                         .UseRecommendedSerializerSettings();
                 });
         }
+
+        public static IIntegrationHostBuilder CreateDefaultBuilder() => CreateDefaultBuilder(null);
 
         private static void CreateDatabaseIfNotExist(string connectionString)
         {

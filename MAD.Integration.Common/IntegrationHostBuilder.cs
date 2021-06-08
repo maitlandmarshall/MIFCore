@@ -25,9 +25,21 @@ namespace MAD.Integration.Common
         private readonly List<Action<IServiceCollection>> configureServiceActions = new List<Action<IServiceCollection>>();
         private readonly IHostBuilder hostBuilder;
 
-        public IntegrationHostBuilder()
+        public IntegrationHostBuilder(string[] args)
         {
-            this.hostBuilder = Host.CreateDefaultBuilder();
+            if (args != null)
+            {
+                this.hostBuilder = Host.CreateDefaultBuilder(args);
+            }
+            else
+            {
+                this.hostBuilder = Host.CreateDefaultBuilder();
+            }
+        }
+
+        public IntegrationHostBuilder() : this(null)
+        {
+            
         }
 
         public IDictionary<object, object> Properties { get; }
