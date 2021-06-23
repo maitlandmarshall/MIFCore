@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -15,6 +16,7 @@ namespace MAD.Integration.Common.Settings
             where TSettings : class, new()
         {
             serviceDescriptors.Configure<TSettings>(IntegrationHost.DefaultConfiguration);
+            serviceDescriptors.AddSingleton<TSettings>(y => y.GetRequiredService<IOptions<TSettings>>().Value);
 
             return serviceDescriptors;
         }

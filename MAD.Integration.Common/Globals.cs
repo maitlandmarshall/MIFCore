@@ -14,7 +14,6 @@ namespace MAD.Integration.Common
             {
 #if DEBUG
                 return Directory.GetCurrentDirectory();
-
 #else
                 return Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
 #endif
