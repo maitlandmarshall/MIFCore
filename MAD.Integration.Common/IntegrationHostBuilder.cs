@@ -224,7 +224,7 @@ namespace MAD.Integration.Common
             if (configureMethod != null)
             {
                 IEnumerable<object> paramsToInject = configureMethod.GetParameters()
-                    .Select(y => startupScope.ServiceProvider.GetService(y.ParameterType));
+                    .Select(y => startupScope.ServiceProvider.GetRequiredService(y.ParameterType));
 
                 object invokeResult = configureMethod.Invoke(this.startupRef, paramsToInject.ToArray());
 
