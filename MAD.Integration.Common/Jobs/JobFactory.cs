@@ -10,7 +10,7 @@ namespace MAD.Integration.Common.Jobs
 {
     public static class JobFactory
     {
-        public static void CreateRecurringJob<T>(string jobName, Expression<Func<T, Task>> methodCall, string cronSchedule = null)
+        public static void CreateRecurringJob<T>(string jobName, Expression<Func<T, Task>> methodCall, string cronSchedule = null, string queue = "default")
         {
             cronSchedule ??= Cron.Daily(22, 30);
 
@@ -20,7 +20,8 @@ namespace MAD.Integration.Common.Jobs
                 recurringJobId: jobName,
                 methodCall: methodCall,
                 cronExpression: cronSchedule,
-                timeZone: TimeZoneInfo.Local);
+                timeZone: TimeZoneInfo.Local,
+                queue: queue);
 
             RecurringJobDto newJob = connection.GetRecurringJobs(new string[] { jobName }).First();
 
@@ -28,7 +29,7 @@ namespace MAD.Integration.Common.Jobs
                 RecurringJob.Trigger(jobName);
         }
 
-        public static void CreateRecurringJob(string jobName, Expression<Func<Task>> methodCall, string cronSchedule = null)
+        public static void CreateRecurringJob(string jobName, Expression<Func<Task>> methodCall, string cronSchedule = null, string queue = "default")
         {
             cronSchedule ??= Cron.Daily(22, 30);
 
@@ -38,7 +39,8 @@ namespace MAD.Integration.Common.Jobs
                 recurringJobId: jobName,
                 methodCall: methodCall,
                 cronExpression: cronSchedule,
-                timeZone: TimeZoneInfo.Local);
+                timeZone: TimeZoneInfo.Local,
+                queue: queue);
 
             RecurringJobDto newJob = connection.GetRecurringJobs(new string[] { jobName }).First();
 
