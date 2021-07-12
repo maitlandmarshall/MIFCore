@@ -19,7 +19,7 @@ namespace MAD.Integration.Common.Jobs
         }
 
         public uint FingerprintTimeoutMinutes { get; set; } = 0;
-        public bool IncludeFailedJobs { get; set; } = true;
+        public bool IncludeFailedJobs { get; set; }
 
         public void OnCreating(CreatingContext filterContext)
         {
