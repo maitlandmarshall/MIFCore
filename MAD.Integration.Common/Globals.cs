@@ -12,7 +12,7 @@ namespace MAD.Integration.Common
         {
             get 
             {
-                var mainModule = Process.GetCurrentProcess().MainModule.FileName;
+                var mainModule = MainModule;
 
                 // Handle if called from dotnet ef migrations or other tool
                 if (Path.GetFileName(mainModule) == "dotnet.exe")
@@ -22,6 +22,14 @@ namespace MAD.Integration.Common
 
                 // Handle if running normally or as a contained single exe service
                 return Path.GetDirectoryName(mainModule);
+            }
+        }
+
+        public static string MainModule
+        {
+            get
+            {
+                return Process.GetCurrentProcess().MainModule.FileName;
             }
         }
     }

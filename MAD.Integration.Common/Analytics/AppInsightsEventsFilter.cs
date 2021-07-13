@@ -9,7 +9,9 @@ using Microsoft.ApplicationInsights.Extensibility;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace MAD.Integration.Common.Analytics
@@ -26,12 +28,6 @@ namespace MAD.Integration.Common.Analytics
             this.telemetryClient = telemetryClient;
         }
 
-        private void SetTelemetryProperties(IDictionary<string, string> props, BackgroundJob backgroundJob)
-        {
-            props.Add("jobName", this.GetJobName(backgroundJob));
-            props.Add("arguments", this.GetJobArguments(backgroundJob));
-        }
-
         private string GetJobName(BackgroundJob backgroundJob)
         {
             return $"{backgroundJob.Job.Type.Name}.{backgroundJob.Job.Method.Name}";
@@ -46,9 +42,9 @@ namespace MAD.Integration.Common.Analytics
         {
             operationHolder = this.telemetryClient.StartOperation<RequestTelemetry>(this.GetJobName(filterContext.BackgroundJob));
             operationHolder.Telemetry.Properties.Add("arguments", this.GetJobArguments(filterContext.BackgroundJob));
+            operationHolder.Telemetry.Properties.Add("appName", Path.GetFileNameWithoutExtension(Globals.MainModule));
 
             var eventTelemetry = new EventTelemetry("Job Started");
-            this.SetTelemetryProperties(eventTelemetry.Properties, filterContext.BackgroundJob);
             eventTelemetry.Context.Operation.Id = operationHolder.Telemetry.Context.Operation.Id;
 
             this.telemetryClient.TrackEvent(eventTelemetry);   
@@ -57,7 +53,6 @@ namespace MAD.Integration.Common.Analytics
         void IServerFilter.OnPerformed(PerformedContext filterContext)
         {
             var eventTelemetry = new EventTelemetry();
-            this.SetTelemetryProperties(eventTelemetry.Properties, filterContext.BackgroundJob);
             eventTelemetry.Context.Operation.Id = operationHolder.Telemetry.Context.Operation.Id;
 
             if (filterContext.Exception != null)
@@ -73,7 +68,6 @@ namespace MAD.Integration.Common.Analytics
                     Exception = exception
                 };
                 
-                this.SetTelemetryProperties(exceptionTelemetry.Properties, filterContext.BackgroundJob);
                 exceptionTelemetry.Context.Operation.Id = operationHolder.Telemetry.Context.Operation.Id;
 
                 this.telemetryClient.TrackException(exceptionTelemetry);
@@ -84,6 +78,8 @@ namespace MAD.Integration.Common.Analytics
             }
             else
             {
+                operationHolder.Telemetry.Success = true;
+                operationHolder.Telemetry.ResponseCode = "Success";
                 eventTelemetry.Name = "Job Succeeded";
             }
 
@@ -100,7 +96,6 @@ namespace MAD.Integration.Common.Analytics
                 operationHolder.Telemetry.ResponseCode = "Failed";
 
                 var eventTelemetry = new EventTelemetry("Job Failed");
-                this.SetTelemetryProperties(eventTelemetry.Properties, context.BackgroundJob);
                 eventTelemetry.Context.Operation.Id = operationHolder.Telemetry.Context.Operation.Id;
 
                 this.telemetryClient.TrackEvent(eventTelemetry);
