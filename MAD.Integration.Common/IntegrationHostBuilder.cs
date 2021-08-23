@@ -1,5 +1,7 @@
 ﻿using Autofac.Extensions.DependencyInjection;
 using Hangfire;
+using Hangfire.MAMQSqlExtension;
+using Hangfire.SqlServer;
 using MAD.Integration.Common.Analytics;
 using MAD.Integration.Common.Hangfire;
 using MAD.Integration.Common.Http;
@@ -69,8 +71,17 @@ namespace MAD.Integration.Common
             var aspNetCoreConfigDescriptor = this.serviceDescriptors.FirstOrDefault(y => y.ServiceType == typeof(AspNetCoreConfig));
             if (aspNetCoreConfigDescriptor != null) this.ConfigureAspNetCore(aspNetCoreConfigDescriptor.ImplementationInstance as AspNetCoreConfig, this.hostBuilder);
 
-            IHost host = this.hostBuilder.Build();
+            var host = this.hostBuilder.Build();
+            
             this.InvokeStartupConfigure(host.Services.GetService<IServiceProvider>());
+
+            // Configure HangfireStorage after Startup.Configure so the library consumer can choose the storage if they want
+            // if they haven't and JobStorage.Current is null, configure it.
+            var hangfireConfig = host.Services.GetService<HangfireConfig>();
+
+            if (hangfireConfig != null
+                && JobStorage.Current == null)
+                this.ConfigureHangfireStorage(hangfireConfig);
 
             return host;
         }
@@ -231,6 +242,16 @@ namespace MAD.Integration.Common
                 if (invokeResult is Task t)
                     t.Wait();
             }
+        }
+
+        private void ConfigureHangfireStorage(HangfireConfig hangfireConfig)
+        {
+            var jobStorage = new MAMQSqlServerStorage(hangfireConfig.ConnectionString, new SqlServerStorageOptions
+            {
+                SchemaName = "job"
+            }, hangfireConfig.Queues ?? JobQueue.Queues);
+
+            JobStorage.Current = jobStorage;
         }
     }
 }

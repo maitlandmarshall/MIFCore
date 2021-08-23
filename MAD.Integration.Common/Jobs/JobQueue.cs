@@ -11,5 +11,10 @@ namespace MAD.Integration.Common.Jobs
         public const string Default = "default";
         public const string Beta = "e-beta";
         public const string Low = "z";
+
+        public static string[] Queues
+        {
+            get => new[] { JobQueue.Alpha, JobQueue.Beta, JobQueue.Default, JobQueue.Low };
+        }
     }
 }

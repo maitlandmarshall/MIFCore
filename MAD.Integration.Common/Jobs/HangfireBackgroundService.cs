@@ -38,19 +38,14 @@ namespace MAD.Integration.Common.Jobs
             if (string.IsNullOrEmpty(hangfireConfig.ConnectionString))
                 throw new ArgumentNullException(nameof(this.hangfireConfig.ConnectionString));
 
-            var queues = this.hangfireConfig.Queues ?? new[] { JobQueue.Alpha, JobQueue.Beta, JobQueue.Default, JobQueue.Low };
             var appInsights = this.rootScope.ResolveOptional<AppInsightsConfig>();
             var childScope = ServiceScope = this.rootScope.BeginLifetimeScope("HangfireServiceScope");
             var activator = new AutofacLifecycleJobActivator(childScope);
             var options = new BackgroundJobServerOptions()
             {
                 Activator = activator,
-                Queues = queues
+                Queues = this.hangfireConfig.Queues ?? JobQueue.Queues
             };
-            var jobStorage = new MAMQSqlServerStorage(this.hangfireConfig.ConnectionString, new SqlServerStorageOptions
-            {
-                SchemaName = "job"
-            }, queues);
 
             if (!string.IsNullOrEmpty(appInsights?.InstrumentationKey))
             {
@@ -60,7 +55,7 @@ namespace MAD.Integration.Common.Jobs
 
             this.CreateDatabaseIfNotExist(this.hangfireConfig.ConnectionString);
 
-            using (var server = new BackgroundJobServer(options, jobStorage))
+            using (var server = new BackgroundJobServer(options))
             {
                 await server.WaitForShutdownAsync(stoppingToken);
             }

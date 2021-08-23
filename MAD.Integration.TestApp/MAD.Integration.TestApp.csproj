@@ -6,13 +6,17 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MAD.Integration.Common\MAD.Integration.Common.csproj" />
+    <None Remove="settings.default.json" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="settings.default.json">
+    <Content Include="settings.default.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MAD.Integration.Common\MAD.Integration.Common.csproj" />
   </ItemGroup>
 
 </Project>

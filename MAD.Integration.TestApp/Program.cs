@@ -1,4 +1,6 @@
-﻿using MAD.Integration.Common;
+﻿using Hangfire;
+using MAD.Integration.Common;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System;
 
@@ -11,6 +13,8 @@ namespace MAD.Integration.TestApp
             var host = IntegrationHost.CreateDefaultBuilder()
                 .UseStartup<Startup>()
                 .Build();
+
+            var jc = host.Services.GetRequiredService<IBackgroundJobClient>();
 
             host.Run();
         }
