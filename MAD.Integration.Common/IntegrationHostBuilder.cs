@@ -72,15 +72,11 @@ namespace MAD.Integration.Common
             if (aspNetCoreConfigDescriptor != null) this.ConfigureAspNetCore(aspNetCoreConfigDescriptor.ImplementationInstance as AspNetCoreConfig, this.hostBuilder);
 
             var host = this.hostBuilder.Build();
-            
-            this.InvokeStartupConfigure(host.Services.GetService<IServiceProvider>());
-
-            // Configure HangfireStorage after Startup.Configure so the library consumer can choose the storage if they want
-            // if they haven't and JobStorage.Current is null, configure it.
             var hangfireConfig = host.Services.GetService<HangfireConfig>();
 
-            if (hangfireConfig != null
-                && JobStorage.Current == null)
+            this.InvokeStartupConfigure(host.Services.GetService<IServiceProvider>());
+
+            if (hangfireConfig != null)
                 this.ConfigureHangfireStorage(hangfireConfig);
 
             return host;
