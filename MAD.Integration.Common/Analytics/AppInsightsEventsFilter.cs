@@ -28,32 +28,28 @@ namespace MAD.Integration.Common.Analytics
             this.telemetryClient = telemetryClient;
         }
 
-        private string GetJobName(BackgroundJob backgroundJob)
-        {
-            return $"{backgroundJob.Job.Type.Name}.{backgroundJob.Job.Method.Name}";
-        }
-
-        private string GetJobArguments(BackgroundJob backgroundJob)
-        {
-            return JsonConvert.SerializeObject(backgroundJob.Job.Args);
-        }
-
         void IServerFilter.OnPerforming(PerformingContext filterContext)
         {
-            operationHolder = this.telemetryClient.StartOperation<RequestTelemetry>(this.GetJobName(filterContext.BackgroundJob));
+            var appName = Path.GetFileNameWithoutExtension(Globals.MainModule);
+            var operationId = $"{appName}.{filterContext.BackgroundJob.Id}";
+
+            operationHolder = this.telemetryClient.StartOperation<RequestTelemetry>(this.GetJobName(filterContext.BackgroundJob), operationId);
             operationHolder.Telemetry.Properties.Add("arguments", this.GetJobArguments(filterContext.BackgroundJob));
-            operationHolder.Telemetry.Properties.Add("appName", Path.GetFileNameWithoutExtension(Globals.MainModule));
+            operationHolder.Telemetry.Properties.Add("appName", appName);
 
             var eventTelemetry = new EventTelemetry("Job Started");
-            eventTelemetry.Context.Operation.Id = operationHolder.Telemetry.Context.Operation.Id;
+            eventTelemetry.Context.Operation.Id = operationId;
+            eventTelemetry.Context.Operation.ParentId = operationId;
 
             this.telemetryClient.TrackEvent(eventTelemetry);   
         }
 
         void IServerFilter.OnPerformed(PerformedContext filterContext)
         {
+            var operationId = operationHolder.Telemetry.Context.Operation.Id;
             var eventTelemetry = new EventTelemetry();
-            eventTelemetry.Context.Operation.Id = operationHolder.Telemetry.Context.Operation.Id;
+            eventTelemetry.Context.Operation.Id = operationId;
+            eventTelemetry.Context.Operation.ParentId = operationId;
 
             if (filterContext.Exception != null)
             {
@@ -63,14 +59,15 @@ namespace MAD.Integration.Common.Analytics
                     exception = perfEx.InnerException;
                 }
 
-                var exceptionTelemetry = new ExceptionTelemetry
+                var exceptionTelemetry = new ExceptionTelemetry()
                 {
                     Exception = exception
                 };
-                
-                exceptionTelemetry.Context.Operation.Id = operationHolder.Telemetry.Context.Operation.Id;
 
+                exceptionTelemetry.Context.Operation.Id = operationId;
+                exceptionTelemetry.Context.Operation.ParentId = operationId;
                 this.telemetryClient.TrackException(exceptionTelemetry);
+
                 operationHolder.Telemetry.Success = false;
                 operationHolder.Telemetry.ResponseCode = "Attempt Failed";
 
@@ -97,6 +94,7 @@ namespace MAD.Integration.Common.Analytics
 
                 var eventTelemetry = new EventTelemetry("Job Failed");
                 eventTelemetry.Context.Operation.Id = operationHolder.Telemetry.Context.Operation.Id;
+                eventTelemetry.Context.Operation.ParentId = operationHolder.Telemetry.Context.Operation.Id;
 
                 this.telemetryClient.TrackEvent(eventTelemetry);
             }
@@ -113,5 +111,16 @@ namespace MAD.Integration.Common.Analytics
         }
 
         public void OnStateUnapplied(ApplyStateContext context, IWriteOnlyTransaction transaction) { }
+
+        private string GetJobName(BackgroundJob backgroundJob)
+        {
+            return $"{backgroundJob.Job.Type.Name}.{backgroundJob.Job.Method.Name}";
+        }
+
+        private string GetJobArguments(BackgroundJob backgroundJob)
+        {
+            return JsonConvert.SerializeObject(backgroundJob.Job.Args);
+        }
+
     }
 }
