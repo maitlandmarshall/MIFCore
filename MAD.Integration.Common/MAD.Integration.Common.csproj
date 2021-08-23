@@ -12,21 +12,21 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageTags>Hangfire, Scheduling, Jobs, Simplified</PackageTags>
     <Description>Provides an IntegrationHost which allows you to build integrations using Hangfire and AspNetCore</Description>
-    <Version>1.1.13</Version>
+    <Version>1.1.14</Version>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Autofac" Version="5.2.0" />
     <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="6.0.0" />
     
-    <PackageReference Include="Hangfire.AspNetCore" Version="1.7.12" />
-    <PackageReference Include="Hangfire.Core" Version="1.7.12" />
+    <PackageReference Include="Hangfire.AspNetCore" Version="1.7.24" />
+    <PackageReference Include="Hangfire.Core" Version="1.7.24" />
     <PackageReference Include="Hangfire.MAMQSqlExtension" Version="1.0.5" />
-    <PackageReference Include="Hangfire.SqlServer" Version="1.7.12" />
+    <PackageReference Include="Hangfire.SqlServer" Version="1.7.24" />
     
-    <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.14.0" />
-    <PackageReference Include="Microsoft.ApplicationInsights.DependencyCollector" Version="2.14.0" />
-    <PackageReference Include="Microsoft.ApplicationInsights.PerfCounterCollector" Version="2.14.0" />
+    <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.18.0" />
+    <PackageReference Include="Microsoft.ApplicationInsights.DependencyCollector" Version="2.18.0" />
+    <PackageReference Include="Microsoft.ApplicationInsights.PerfCounterCollector" Version="2.18.0" />
    
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="3.1.7" />
     <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="3.1.7" />

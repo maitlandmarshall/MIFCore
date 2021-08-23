@@ -10,6 +10,7 @@ using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.QuickPulse;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
+using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Threading;
@@ -34,6 +35,9 @@ namespace MAD.Integration.Common.Jobs
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            if (string.IsNullOrEmpty(hangfireConfig.ConnectionString))
+                throw new ArgumentNullException(nameof(this.hangfireConfig.ConnectionString));
+
             var queues = this.hangfireConfig.Queues ?? new[] { JobQueue.Alpha, JobQueue.Beta, JobQueue.Default, JobQueue.Low };
             var appInsights = this.rootScope.ResolveOptional<AppInsightsConfig>();
             var childScope = ServiceScope = this.rootScope.BeginLifetimeScope("HangfireServiceScope");
@@ -47,9 +51,6 @@ namespace MAD.Integration.Common.Jobs
             {
                 SchemaName = "job"
             }, queues);
-
-            this.globalConfig
-                .UseFilter(new BackgroundJobContext());
 
             if (!string.IsNullOrEmpty(appInsights?.InstrumentationKey))
             {
@@ -67,9 +68,6 @@ namespace MAD.Integration.Common.Jobs
 
         private void CreateDatabaseIfNotExist(string connectionString)
         {
-            if (string.IsNullOrEmpty(connectionString))
-                return;
-
             var connectionStringBuilder = new SqlConnectionStringBuilder(connectionString);
             var dbName = connectionStringBuilder.InitialCatalog;
 

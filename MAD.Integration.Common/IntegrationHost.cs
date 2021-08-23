@@ -1,5 +1,6 @@
 ﻿using Hangfire;
 using Hangfire.SqlServer;
+using MAD.Integration.Common.Jobs;
 using MAD.Integration.Common.Settings;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
@@ -27,6 +28,7 @@ namespace MAD.Integration.Common
                 .UseHangfire((globalHangfireConfig, hangfireServiceConfig) =>
                 {
                     globalHangfireConfig.UseRecommendedSerializerSettings();
+                    globalHangfireConfig.UseFilter(new BackgroundJobContext());
                 });
         }
 
