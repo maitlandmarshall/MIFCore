@@ -1,6 +1,8 @@
 ﻿using Autofac;
 using Hangfire;
 using Hangfire.Common;
+using Hangfire.MAMQSqlExtension;
+using Hangfire.SqlServer;
 using MAD.Integration.Common.Analytics;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.DependencyCollector;
@@ -9,6 +11,7 @@ using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.QuickPuls
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using System.Collections.Generic;
+using System.Data.SqlClient;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -31,14 +34,19 @@ namespace MAD.Integration.Common.Jobs
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            var queues = this.hangfireConfig.Queues ?? new[] { JobQueue.Alpha, JobQueue.Beta, JobQueue.Default, JobQueue.Low };
             var appInsights = this.rootScope.ResolveOptional<AppInsightsConfig>();
             var childScope = ServiceScope = this.rootScope.BeginLifetimeScope("HangfireServiceScope");
             var activator = new AutofacLifecycleJobActivator(childScope);
             var options = new BackgroundJobServerOptions()
             {
                 Activator = activator,
-                Queues = this.hangfireConfig.Queues ?? new[] { JobQueue.Alpha, JobQueue.Beta, JobQueue.Default, JobQueue.Low }
+                Queues = queues
             };
+            var jobStorage = new MAMQSqlServerStorage(this.hangfireConfig.ConnectionString, new SqlServerStorageOptions
+            {
+                SchemaName = "job"
+            }, queues);
 
             this.globalConfig
                 .UseFilter(new BackgroundJobContext());
@@ -49,10 +57,32 @@ namespace MAD.Integration.Common.Jobs
                 this.globalConfig.UseFilter(new AppInsightsEventsFilter(telemetryClient));
             }
 
-            using (var server = new BackgroundJobServer(options))
+            this.CreateDatabaseIfNotExist(this.hangfireConfig.ConnectionString);
+
+            using (var server = new BackgroundJobServer(options, jobStorage))
             {
                 await server.WaitForShutdownAsync(stoppingToken);
             }
         }
+
+        private void CreateDatabaseIfNotExist(string connectionString)
+        {
+            if (string.IsNullOrEmpty(connectionString))
+                return;
+
+            var connectionStringBuilder = new SqlConnectionStringBuilder(connectionString);
+            var dbName = connectionStringBuilder.InitialCatalog;
+
+            connectionStringBuilder.InitialCatalog = "master";
+
+            using var sqlConnection = new SqlConnection(connectionStringBuilder.ToString());
+            using var cmd = sqlConnection.CreateCommand();
+
+            cmd.CommandText = @$"IF NOT EXISTS (SELECT name FROM master.sys.databases WHERE name = N'{dbName}') CREATE DATABASE [{dbName}]";
+
+            sqlConnection.Open();
+            cmd.ExecuteNonQuery();
+        }
+
     }
 }

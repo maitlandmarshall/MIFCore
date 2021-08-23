@@ -21,6 +21,7 @@
     
     <PackageReference Include="Hangfire.AspNetCore" Version="1.7.12" />
     <PackageReference Include="Hangfire.Core" Version="1.7.12" />
+    <PackageReference Include="Hangfire.MAMQSqlExtension" Version="1.0.5" />
     <PackageReference Include="Hangfire.SqlServer" Version="1.7.12" />
     
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.14.0" />

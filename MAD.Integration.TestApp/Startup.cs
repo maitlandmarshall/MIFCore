@@ -1,4 +1,5 @@
-﻿using MAD.Integration.Common.Jobs;
+﻿using Hangfire;
+using MAD.Integration.Common.Jobs;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace MAD.Integration.TestApp
@@ -10,7 +11,7 @@ namespace MAD.Integration.TestApp
 
         }
 
-        public void Configure(HangfireConfig hangfireConfig)
+        public void Configure(IGlobalConfiguration globalConfiguration, HangfireConfig hangfireConfig)
         {
             hangfireConfig.Queues = new[] { "abnc" };
         }
