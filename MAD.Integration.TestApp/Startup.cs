@@ -11,9 +11,9 @@ namespace MAD.Integration.TestApp
 
         }
 
-        public void Configure(IGlobalConfiguration globalConfiguration, HangfireConfig hangfireConfig)
+        public void Configure()
         {
-            hangfireConfig.Queues = new[] { "abnc" };
+            
         }
     }
 }

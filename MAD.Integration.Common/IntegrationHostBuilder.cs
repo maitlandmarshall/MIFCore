@@ -21,7 +21,7 @@ namespace MAD.Integration.Common
 {
     public partial class IntegrationHostBuilder : IIntegrationHostBuilder
     {
-        private object startupRef;
+        private StartupHandler startupHandler = new StartupHandler();
 
         private readonly IServiceCollection serviceDescriptors = new ServiceCollection();
         private readonly List<Action<IServiceCollection>> configureServiceActions = new List<Action<IServiceCollection>>();
@@ -48,7 +48,7 @@ namespace MAD.Integration.Common
 
         public IHost Build()
         {
-            this.AddStartupConfigureServices();
+            this.startupHandler.ConfigureServices(this);
             this.InvokeConfigureServiceActions();
 
             var serviceProviderFactory = new AutofacServiceProviderFactory(builder => builder.Populate(this.serviceDescriptors));
@@ -74,7 +74,7 @@ namespace MAD.Integration.Common
             var host = this.hostBuilder.Build();
             var hangfireConfig = host.Services.GetService<HangfireConfig>();
 
-            this.InvokeStartupConfigure(host.Services.GetService<IServiceProvider>());
+            this.startupHandler.Configure(host.Services.GetService<IServiceProvider>());
 
             if (hangfireConfig != null)
                 this.ConfigureHangfireStorage(hangfireConfig);
@@ -90,7 +90,7 @@ namespace MAD.Integration.Common
 
         public IIntegrationHostBuilder UseStartup<TStartup>() where TStartup : class, new()
         {
-            this.startupRef = new TStartup();
+            this.startupHandler.SetStartup<TStartup>();
             return this;
         }
 
@@ -204,41 +204,6 @@ namespace MAD.Integration.Common
             });
         }
 
-        private void AddStartupConfigureServices()
-        {
-            if (this.startupRef is null)
-                return;
-
-            MethodInfo configureServices = this.startupRef.GetType().GetMethod("ConfigureServices", new[] { typeof(IServiceCollection) });
-
-            if (configureServices != null)
-            {
-                this.ConfigureServices(sc =>
-                {
-                    configureServices.Invoke(this.startupRef, new[] { sc });
-                });
-            }
-        }
-
-        private void InvokeStartupConfigure(IServiceProvider serviceProvider)
-        {
-            if (this.startupRef is null)
-                return;
-
-            var configureMethod = this.startupRef.GetType().GetMethod("Configure");
-            using var startupScope = serviceProvider.CreateScope();
-
-            if (configureMethod != null)
-            {
-                IEnumerable<object> paramsToInject = configureMethod.GetParameters()
-                    .Select(y => startupScope.ServiceProvider.GetRequiredService(y.ParameterType));
-
-                object invokeResult = configureMethod.Invoke(this.startupRef, paramsToInject.ToArray());
-
-                if (invokeResult is Task t)
-                    t.Wait();
-            }
-        }
 
         private void ConfigureHangfireStorage(HangfireConfig hangfireConfig)
         {
