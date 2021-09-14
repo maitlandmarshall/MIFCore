@@ -68,11 +68,6 @@ namespace MAD.Integration.Common
                     cfg.AddConfiguration(IntegrationHost.DefaultConfiguration);
                 });
 
-            // Has AspNetCoreConfig been added through IntegrationHostBuilder.UseAspNetCore()?
-            // If it has, extract the singleton instance & extend the host builder with WebHostDefaults
-            var aspNetCoreConfigDescriptor = this.serviceDescriptors.FirstOrDefault(y => y.ServiceType == typeof(AspNetCoreConfig));
-            if (aspNetCoreConfigDescriptor != null) this.ConfigureAspNetCore(aspNetCoreConfigDescriptor.ImplementationInstance as AspNetCoreConfig, this.hostBuilder);
-
             var host = this.hostBuilder.Build();
             var hangfireConfig = host.Services.GetService<HangfireConfig>();
 
@@ -179,29 +174,5 @@ namespace MAD.Integration.Common
                 configServices(this.serviceDescriptors);
             }
         }
-
-        private void ConfigureAspNetCore(AspNetCoreConfig aspNetCoreConfig, IHostBuilder hostBuilder)
-        {
-            hostBuilder.ConfigureWebHostDefaults(webHost =>
-            {
-                webHost.UseStartup<WebHostStartup>();
-
-                if (aspNetCoreConfig.BindingPort == 80 || aspNetCoreConfig.BindingPort == 443)
-                {
-                    webHost.UseHttpSys(options =>
-                    {
-                        options.UrlPrefixes.Add($"http://*:{aspNetCoreConfig.BindingPort}/{aspNetCoreConfig.BindingPath}");
-                    });
-                }
-                else
-                {
-                    webHost.UseKestrel(options =>
-                    {
-                        options.ListenAnyIP(aspNetCoreConfig.BindingPort);
-                    });
-                }
-            });
-        }
-
     }
 }

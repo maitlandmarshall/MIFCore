@@ -21,6 +21,7 @@ namespace MAD.Integration.Common.Hangfire
             configureDelegate?.Invoke(aspNetCoreConfig);
 
             serviceCollection.AddSingleton<AspNetCoreConfig>(aspNetCoreConfig);
+            serviceCollection.AddHostedService<AspNetCoreBackgroundService>();
 
             return serviceCollection;
         }

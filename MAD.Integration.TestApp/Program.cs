@@ -13,7 +13,7 @@ namespace MAD.Integration.TestApp
         {
             var host = IntegrationHost.CreateDefaultBuilder()
                 .UseStartup<Startup>()
-                //.UseAspNetCore()
+                .UseAspNetCore()
                 .Build();
 
             await host.RunAsync();

@@ -11,6 +11,8 @@ namespace MAD.Integration.Common
     {
         public object Startup { get; private set; }
 
+        private readonly TaskCompletionSource<bool> waitForPostConfigureTsc = new TaskCompletionSource<bool>();
+
         public void SetStartup<T>() where T : class, new()
         {
             this.Startup = new T();
@@ -46,6 +48,7 @@ namespace MAD.Integration.Common
                 return;
 
             this.RunMethodAndInject(serviceProvider, nameof(PostConfigure));
+            this.waitForPostConfigureTsc.SetResult(true);
         }
 
         public async Task CreateDatabaseIfNotExist(string connectionString)
@@ -62,6 +65,11 @@ namespace MAD.Integration.Common
 
             await sqlConnection.OpenAsync();
             await cmd.ExecuteNonQueryAsync();
+        }
+
+        public async Task WaitForPostConfigure()
+        {
+            await this.waitForPostConfigureTsc.Task;
         }
 
         private void RunMethodAndInject(IServiceProvider serviceProvider, string methodName)
