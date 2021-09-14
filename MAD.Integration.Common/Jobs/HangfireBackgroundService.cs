@@ -18,19 +18,21 @@ using System.Threading.Tasks;
 
 namespace MAD.Integration.Common.Jobs
 {
-    public class HangfireBackgroundService : BackgroundService
+    internal class HangfireBackgroundService : BackgroundService
     {
         private readonly ILifetimeScope rootScope;
         private readonly IGlobalConfiguration globalConfig;
         private readonly HangfireConfig hangfireConfig;
+        private readonly StartupHandler startupHandler;
 
         internal static ILifetimeScope ServiceScope { get; private set; }
 
-        public HangfireBackgroundService(ILifetimeScope rootScope, IGlobalConfiguration config, HangfireConfig hangfireConfig)
+        public HangfireBackgroundService(ILifetimeScope rootScope, IGlobalConfiguration config, HangfireConfig hangfireConfig, StartupHandler startupHandler)
         {
             this.rootScope = rootScope;
             this.globalConfig = config;
             this.hangfireConfig = hangfireConfig;
+            this.startupHandler = startupHandler;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -53,7 +55,8 @@ namespace MAD.Integration.Common.Jobs
                 this.globalConfig.UseFilter(new AppInsightsEventsFilter(telemetryClient));
             }
 
-            this.CreateDatabaseIfNotExist(this.hangfireConfig.ConnectionString);
+            await this.InitializeStorage();
+            this.startupHandler.PostConfigure(this.rootScope as IServiceProvider);
 
             using (var server = new BackgroundJobServer(options))
             {
@@ -61,21 +64,18 @@ namespace MAD.Integration.Common.Jobs
             }
         }
 
-        private void CreateDatabaseIfNotExist(string connectionString)
+        private async Task InitializeStorage()
         {
-            var connectionStringBuilder = new SqlConnectionStringBuilder(connectionString);
-            var dbName = connectionStringBuilder.InitialCatalog;
+            await this.startupHandler.CreateDatabaseIfNotExist(this.hangfireConfig.ConnectionString);
 
-            connectionStringBuilder.InitialCatalog = "master";
+            var options = new SqlServerStorageOptions
+            {
+                SchemaName = "job",
+                PrepareSchemaIfNecessary = true
+            };
 
-            using var sqlConnection = new SqlConnection(connectionStringBuilder.ToString());
-            using var cmd = sqlConnection.CreateCommand();
-
-            cmd.CommandText = @$"IF NOT EXISTS (SELECT name FROM master.sys.databases WHERE name = N'{dbName}') CREATE DATABASE [{dbName}]";
-
-            sqlConnection.Open();
-            cmd.ExecuteNonQuery();
+            var jobStorage = new MAMQSqlServerStorage(hangfireConfig.ConnectionString, options, hangfireConfig.Queues ?? JobQueue.Queues);
+            JobStorage.Current = jobStorage;
         }
-
     }
 }

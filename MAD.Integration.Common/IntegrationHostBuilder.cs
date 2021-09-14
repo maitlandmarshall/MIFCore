@@ -48,7 +48,9 @@ namespace MAD.Integration.Common
 
         public IHost Build()
         {
+            this.ConfigureServices(y => y.AddSingleton(startupHandler));
             this.startupHandler.ConfigureServices(this);
+
             this.InvokeConfigureServiceActions();
 
             var serviceProviderFactory = new AutofacServiceProviderFactory(builder => builder.Populate(this.serviceDescriptors));
@@ -75,9 +77,6 @@ namespace MAD.Integration.Common
             var hangfireConfig = host.Services.GetService<HangfireConfig>();
 
             this.startupHandler.Configure(host.Services.GetService<IServiceProvider>());
-
-            if (hangfireConfig != null)
-                this.ConfigureHangfireStorage(hangfireConfig);
 
             return host;
         }
@@ -204,15 +203,5 @@ namespace MAD.Integration.Common
             });
         }
 
-
-        private void ConfigureHangfireStorage(HangfireConfig hangfireConfig)
-        {
-            var jobStorage = new MAMQSqlServerStorage(hangfireConfig.ConnectionString, new SqlServerStorageOptions
-            {
-                SchemaName = "job"
-            }, hangfireConfig.Queues ?? JobQueue.Queues);
-
-            JobStorage.Current = jobStorage;
-        }
     }
 }

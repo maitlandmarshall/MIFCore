@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -20,7 +21,7 @@ namespace MAD.Integration.Common
             if (this.Startup is null)
                 return;
 
-            var configureServices = this.Startup.GetType().GetMethod("ConfigureServices", new[] { typeof(IServiceCollection) });
+            var configureServices = this.Startup.GetType().GetMethod(nameof(ConfigureServices), new[] { typeof(IServiceCollection) });
 
             if (configureServices != null)
             {
@@ -36,20 +37,48 @@ namespace MAD.Integration.Common
             if (this.Startup is null)
                 return;
 
-            var configureMethod = this.Startup.GetType().GetMethod("Configure");
-
-            if (configureMethod != null)
-            {
-                using var startupScope = serviceProvider.CreateScope();
-                var paramsToInject = configureMethod.GetParameters()
-                    .Select(y => startupScope.ServiceProvider.GetRequiredService(y.ParameterType));
-
-                object invokeResult = configureMethod.Invoke(this.Startup, paramsToInject.ToArray());
-
-                if (invokeResult is Task t)
-                    t.Wait();
-            }
+            this.RunMethodAndInject(serviceProvider, nameof(Configure));
         }
-        
+
+        public void PostConfigure(IServiceProvider serviceProvider)
+        {
+            if (this.Startup is null)
+                return;
+
+            this.RunMethodAndInject(serviceProvider, nameof(PostConfigure));
+        }
+
+        public async Task CreateDatabaseIfNotExist(string connectionString)
+        {
+            var connectionStringBuilder = new SqlConnectionStringBuilder(connectionString);
+            var dbName = connectionStringBuilder.InitialCatalog;
+
+            connectionStringBuilder.InitialCatalog = "master";
+
+            using var sqlConnection = new SqlConnection(connectionStringBuilder.ToString());
+            using var cmd = sqlConnection.CreateCommand();
+
+            cmd.CommandText = @$"IF NOT EXISTS (SELECT name FROM master.sys.databases WHERE name = N'{dbName}') CREATE DATABASE [{dbName}]";
+
+            await sqlConnection.OpenAsync();
+            await cmd.ExecuteNonQueryAsync();
+        }
+
+        private void RunMethodAndInject(IServiceProvider serviceProvider, string methodName)
+        {
+            var methodToRun = this.Startup.GetType().GetMethod(methodName);
+
+            if (methodToRun is null)
+                return;
+
+            using var startupScope = serviceProvider.CreateScope();
+            var paramsToInject = methodToRun.GetParameters()
+                .Select(y => startupScope.ServiceProvider.GetRequiredService(y.ParameterType));
+
+            object invokeResult = methodToRun.Invoke(this.Startup, paramsToInject.ToArray());
+
+            if (invokeResult is Task t)
+                t.Wait();
+        }
     }
 }

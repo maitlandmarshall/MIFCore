@@ -1,6 +1,8 @@
 ﻿using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Hangfire;
+using Hangfire.SqlServer;
+using MAD.Integration.Common.Jobs;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using System;
@@ -20,7 +22,7 @@ namespace MAD.Integration.Common.Http
                 .AddApplicationPart(Assembly.GetEntryAssembly());
         }
 
-        public void Configure(IApplicationBuilder app, AspNetCoreConfig aspNetCoreConfig)
+        public void Configure(IApplicationBuilder app, AspNetCoreConfig aspNetCoreConfig, HangfireConfig hangfireConfig)
         {
             var dashboardOptions = new DashboardOptions
             {
@@ -29,13 +31,18 @@ namespace MAD.Integration.Common.Http
 
             if (!string.IsNullOrEmpty(aspNetCoreConfig.BindingPath)) app.UsePathBase($"/{aspNetCoreConfig.BindingPath}");
 
+            var jobStorage = new SqlServerStorage(hangfireConfig.ConnectionString, new SqlServerStorageOptions
+            {
+                SchemaName = "job"
+            });
+
             app.UseRouting();
             app.UseEndpoints(cfg => {
                 cfg.MapControllers();
-                cfg.MapHangfireDashboard(dashboardOptions);
+                cfg.MapHangfireDashboard(dashboardOptions, jobStorage);
             });
 
-            app.UseHangfireDashboard(options: dashboardOptions);
+            app.UseHangfireDashboard(options: dashboardOptions, storage: jobStorage);
         }
     }
 }

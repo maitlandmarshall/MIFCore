@@ -8,12 +8,17 @@ namespace MAD.Integration.TestApp
     {
         public void ConfigureServices(IServiceCollection serviceDescriptors)
         {
-
+            serviceDescriptors.AddScoped<SomeJob>();
         }
 
         public void Configure()
         {
             
+        }
+
+        public void PostConfigure(IBackgroundJobClient backgroundJobClient)
+        {
+            backgroundJobClient.Enqueue<SomeJob>(y => y.DoTheJob());
         }
     }
 }
