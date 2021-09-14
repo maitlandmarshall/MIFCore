@@ -12,26 +12,28 @@ using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("MAD.Integration.Common.Tests")]
 namespace MAD.Integration.Common
 {
-    public class IntegrationHost
+  public class IntegrationHost
+  {
+    internal static IConfiguration DefaultConfiguration { get; } = new ConfigurationBuilder().UseSettingsFile().Build();
+
+    public static IIntegrationHostBuilder CreateDefaultBuilder(string[] args)
     {
-        internal static IConfiguration DefaultConfiguration { get; } = new ConfigurationBuilder().UseSettingsFile().Build();
+      Globals.Arguments = new MADArguments(args);
 
-        public static IIntegrationHostBuilder CreateDefaultBuilder(string[] args)
-        {
-            JsonConvert.DefaultSettings = () => new JsonSerializerSettings
-            {
-                Formatting = Formatting.Indented,
-                ContractResolver = new CamelCasePropertyNamesContractResolver()
-            };
+      JsonConvert.DefaultSettings = () => new JsonSerializerSettings
+      {
+        Formatting = Formatting.Indented,
+        ContractResolver = new CamelCasePropertyNamesContractResolver()
+      };
 
-            return new IntegrationHostBuilder(args)
-                .UseHangfire((globalHangfireConfig, hangfireServiceConfig) =>
-                {
-                    globalHangfireConfig.UseRecommendedSerializerSettings();
-                    globalHangfireConfig.UseFilter(new BackgroundJobContext());
-                });
-        }
-
-        public static IIntegrationHostBuilder CreateDefaultBuilder() => CreateDefaultBuilder(null);
+      return new IntegrationHostBuilder(args)
+          .UseHangfire((globalHangfireConfig, hangfireServiceConfig) =>
+          {
+            globalHangfireConfig.UseRecommendedSerializerSettings();
+            globalHangfireConfig.UseFilter(new BackgroundJobContext());
+          });
     }
+
+    public static IIntegrationHostBuilder CreateDefaultBuilder() => CreateDefaultBuilder(null);
+  }
 }
