@@ -18,20 +18,13 @@ namespace MAD.Integration.Common
             this.Startup = new T();
         }
 
-        public void ConfigureServices(IIntegrationHostBuilder integrationHostBuilder)
+        public void ConfigureServices(IServiceCollection serviceDescriptors)
         {
             if (this.Startup is null)
                 return;
 
             var configureServices = this.Startup.GetType().GetMethod(nameof(ConfigureServices), new[] { typeof(IServiceCollection) });
-
-            if (configureServices != null)
-            {
-                integrationHostBuilder.ConfigureServices(sc =>
-                {
-                    configureServices.Invoke(this.Startup, new[] { sc });
-                });
-            }
+            configureServices?.Invoke(this.Startup, new[] { serviceDescriptors });
         }
 
         public void Configure(IServiceProvider serviceProvider)

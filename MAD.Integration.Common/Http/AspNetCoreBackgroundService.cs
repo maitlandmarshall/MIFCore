@@ -1,4 +1,6 @@
-﻿using Hangfire;
+﻿using Autofac;
+using Autofac.Extensions.DependencyInjection;
+using Hangfire;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
@@ -35,6 +37,7 @@ namespace MAD.Integration.Common.Http
                 {
                     svc.AddHangfire(_ => { });
                     svc.AddMvcCore().AddApplicationPart(Assembly.GetEntryAssembly());
+                    this.startupHandler.ConfigureServices(svc);
                 });
 
                 if (aspNetCoreConfig.BindingPort == 80 || aspNetCoreConfig.BindingPort == 443)

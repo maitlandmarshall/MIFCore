@@ -9,6 +9,7 @@ namespace MAD.Integration.TestApp
         public void ConfigureServices(IServiceCollection serviceDescriptors)
         {
             serviceDescriptors.AddScoped<SomeJob>();
+            serviceDescriptors.AddControllers();
         }
 
         public void Configure()

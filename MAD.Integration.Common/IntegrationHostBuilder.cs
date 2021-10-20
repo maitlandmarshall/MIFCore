@@ -49,7 +49,7 @@ namespace MAD.Integration.Common
         public IHost Build()
         {
             this.ConfigureServices(y => y.AddSingleton(startupHandler));
-            this.startupHandler.ConfigureServices(this);
+            this.startupHandler.ConfigureServices(this.serviceDescriptors);
 
             this.InvokeConfigureServiceActions();
 
