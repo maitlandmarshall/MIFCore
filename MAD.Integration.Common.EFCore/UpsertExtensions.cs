@@ -1,5 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using SqlKata.Compilers;
+using SqlKata.Execution;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,49 +26,67 @@ namespace MAD.Integration.Common.EFCore
                 transformations?.Invoke(entity);
 
                 var primaryKey = entityType.FindPrimaryKey();
-                var keys = primaryKey.Properties.Select(x =>
-                {
-                    if (x.PropertyInfo is null)
+                var keys = primaryKey.Properties.ToDictionary(
+                    keySelector: y => y.Name,
+                    elementSelector: x =>
                     {
-                        return g.Entry.Property(x.Name).CurrentValue;
-                    }
-                    else
-                    {
-                        return x.PropertyInfo.GetValue(entity);
-                    }
-                }).ToList();
+                        if (x.PropertyInfo is null)
+                        {
+                            return g.Entry.Property(x.Name).CurrentValue;
+                        }
+                        else
+                        {
+                            return x.PropertyInfo.GetValue(entity);
+                        }
+                    });
 
                 if (entityType.IsOwned())
                 {
-                    g.Entry.State = g.SourceEntry.State;
-                }
-                else
-                {
-                    if (keys.Count == 1)
+                    var ownership = entityType.FindOwnership();
+                    var navigation = ownership.GetNavigation(false);
+
+                    if (navigation.IsCollection())
                     {
-                        dbContext.AddOrUpdateEntity(entity, g.Entry, keys.First());
+                        dbContext.AddOrUpdateEntity(g.Entry, entityType, keys);
                     }
                     else
                     {
-                        dbContext.AddOrUpdateEntity(entity, g.Entry, keys.ToArray());
+                        g.Entry.State = g.SourceEntry.State;
                     }
+                }
+                else
+                {
+                    dbContext.AddOrUpdateEntity(g.Entry, entityType, keys);
                 }
             });
         }
 
-        private static void AddOrUpdateEntity(this DbContext dbContext, object entity, EntityEntry entry, params object[] primaryKeys)
+        private static void AddOrUpdateEntity(this DbContext dbContext, EntityEntry entry, IEntityType entityType, IDictionary<string, object> keys)
         {
-            var existingEntity = dbContext.Find(entity.GetType(), primaryKeys);
+            var tableName = entityType.GetTableName();
+            var db = dbContext.GetQueryFactory();
 
-            if (existingEntity is null)
+            var existingEntityCount = db
+                .Query(tableName)
+                .Where(keys)
+                .Count<int>();
+            
+            if (existingEntityCount == 0)
             {
                 entry.State = EntityState.Added;
             }
             else
             {
-                dbContext.Entry(existingEntity).State = Microsoft.EntityFrameworkCore.EntityState.Detached;
-                entry.State = Microsoft.EntityFrameworkCore.EntityState.Modified;
+                entry.State = EntityState.Modified;
             }
+        }
+
+        private static QueryFactory GetQueryFactory(this DbContext dbContext)
+        {
+            var compiler = new SqlServerCompiler();
+            var db = new QueryFactory(dbContext.Database.GetDbConnection(), compiler);
+
+            return db;
         }
     }
 }
