@@ -1,5 +1,4 @@
 ﻿using Hangfire;
-using Hangfire.Common;
 using Hangfire.Server;
 using Hangfire.States;
 using Hangfire.Storage;
@@ -7,19 +6,15 @@ using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.ApplicationInsights.Extensibility;
 using Newtonsoft.Json;
-using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Threading.Tasks;
 
 namespace MAD.Integration.Common.Analytics
 {
     public class AppInsightsEventsFilter : IServerFilter, IApplyStateFilter
     {
-        [ThreadStatic]
-        private static IOperationHolder<RequestTelemetry> operationHolder;
+        static ConcurrentDictionary<string, IOperationHolder<RequestTelemetry>> operationHolderDict = new ConcurrentDictionary<string, IOperationHolder<RequestTelemetry>>();
 
         private readonly TelemetryClient telemetryClient;
 
@@ -33,20 +28,24 @@ namespace MAD.Integration.Common.Analytics
             var appName = Path.GetFileNameWithoutExtension(Globals.MainModule);
             var operationId = $"{appName}.{filterContext.BackgroundJob.Id}";
 
-            operationHolder = this.telemetryClient.StartOperation<RequestTelemetry>(this.GetJobName(filterContext.BackgroundJob), operationId);
-            operationHolder.Telemetry.Properties.Add("arguments", this.GetJobArguments(filterContext.BackgroundJob));
+            var operationHolder = telemetryClient.StartOperation<RequestTelemetry>(GetJobName(filterContext.BackgroundJob), operationId);
+            operationHolder.Telemetry.Properties.Add("arguments", GetJobArguments(filterContext.BackgroundJob));
             operationHolder.Telemetry.Properties.Add("appName", appName);
+
+            operationHolderDict.TryAdd(filterContext.BackgroundJob.Id, operationHolder);
 
             var eventTelemetry = new EventTelemetry("Job Started");
             eventTelemetry.Context.Operation.Id = operationId;
             eventTelemetry.Context.Operation.ParentId = operationId;
 
-            this.telemetryClient.TrackEvent(eventTelemetry);   
+            telemetryClient.TrackEvent(eventTelemetry);
         }
 
         void IServerFilter.OnPerformed(PerformedContext filterContext)
         {
+            var operationHolder = operationHolderDict[filterContext.BackgroundJob.Id];
             var operationId = operationHolder.Telemetry.Context.Operation.Id;
+
             var eventTelemetry = new EventTelemetry();
             eventTelemetry.Context.Operation.Id = operationId;
             eventTelemetry.Context.Operation.ParentId = operationId;
@@ -66,7 +65,7 @@ namespace MAD.Integration.Common.Analytics
 
                 exceptionTelemetry.Context.Operation.Id = operationId;
                 exceptionTelemetry.Context.Operation.ParentId = operationId;
-                this.telemetryClient.TrackException(exceptionTelemetry);
+                telemetryClient.TrackException(exceptionTelemetry);
 
                 operationHolder.Telemetry.Success = false;
                 operationHolder.Telemetry.ResponseCode = "Attempt Failed";
@@ -77,14 +76,17 @@ namespace MAD.Integration.Common.Analytics
             {
                 operationHolder.Telemetry.Success = true;
                 operationHolder.Telemetry.ResponseCode = "Success";
+
                 eventTelemetry.Name = "Job Succeeded";
             }
 
-            this.telemetryClient.TrackEvent(eventTelemetry);
+            telemetryClient.TrackEvent(eventTelemetry);
         }
 
         public void OnStateApplied(ApplyStateContext context, IWriteOnlyTransaction transaction)
         {
+            operationHolderDict.TryGetValue(context.BackgroundJob.Id, out var operationHolder);
+
             try
             {
                 if (context.NewState.Name != FailedState.StateName) return;
@@ -96,18 +98,18 @@ namespace MAD.Integration.Common.Analytics
                 eventTelemetry.Context.Operation.Id = operationHolder.Telemetry.Context.Operation.Id;
                 eventTelemetry.Context.Operation.ParentId = operationHolder.Telemetry.Context.Operation.Id;
 
-                this.telemetryClient.TrackEvent(eventTelemetry);
+                telemetryClient.TrackEvent(eventTelemetry);
             }
             finally
             {
                 if (operationHolder != null)
                 {
-                    this.telemetryClient.StopOperation(operationHolder);
+                    telemetryClient.StopOperation(operationHolder);
 
                     operationHolder.Dispose();
-                    operationHolder = null;
+                    operationHolderDict.TryRemove(context.BackgroundJob.Id, out var _);
                 }
-            }  
+            }
         }
 
         public void OnStateUnapplied(ApplyStateContext context, IWriteOnlyTransaction transaction) { }
