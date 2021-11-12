@@ -10,5 +10,6 @@ namespace MAD.Integration.Common.EFCore.Tests.Data
         public string Name { get; set; }
 
         public OfficeAddress OfficeAddress { get; set; }
+        public ProjectRegion Region { get; set; }
     }
 }

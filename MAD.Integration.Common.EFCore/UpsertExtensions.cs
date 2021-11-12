@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using SqlKata.Compilers;
@@ -18,7 +19,7 @@ namespace MAD.Integration.Common.EFCore
             dbContext.ChangeTracker.TrackGraph(entity, g =>
             {
                 var entity = g.Entry.Entity;
-                var entityType = dbContext.Model.FindEntityType(entity.GetType());
+                var entityType = g.Entry.OriginalValues.EntityType;
 
                 if (entityType is null)
                     return;

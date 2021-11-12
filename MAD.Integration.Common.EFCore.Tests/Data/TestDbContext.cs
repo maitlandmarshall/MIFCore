@@ -23,6 +23,7 @@ namespace MAD.Integration.Common.EFCore.Tests.Data
                 {
                     cfg.Property(y => y.Id).ValueGeneratedNever();
                     cfg.OwnsOne(y => y.OfficeAddress);
+                    cfg.OwnsOne(y => y.Region);
                 });
                 cfg.OwnsOne(y => y.Region);
                 cfg.OwnsMany(y => y.Departments, cfg =>

@@ -74,6 +74,78 @@ namespace MAD.Integration.Common.EFCore.Tests
             }
         }
 
+        [TestMethod()]
+        public void Upsert_Update_WithSingleTypeThatMultipleOwnersPropertiesAreSet()
+        {
+            var project = new Project
+            {
+                Id = 1337,
+                Name = "Cool project",
+                Office = new ProjectOffice
+                {
+                    Id = 1899,
+                    Name = "Main office",
+                    Region = new ProjectRegion
+                    {
+                        Name = "Australia",
+                        Id = 998
+                    },
+                    OfficeAddress = new OfficeAddress
+                    {
+                        Address = "123 Fake Street",
+                        City = "Fake City"
+                    }
+                },
+                Region = new ProjectRegion
+                {
+                    Name = "Australia",
+                    Id = 998
+                },
+                Departments = new List<ProjectDepartment>
+                {
+                   new ProjectDepartment
+                   {
+                       Id = 1,
+                       Name = "Mech"
+                   },
+                   new ProjectDepartment
+                   {
+                       Id = 2,
+                       Name = "Dech"
+                   }
+                }
+            };
+
+            using (var db = TestDbContextFactory.Create())
+            {
+                db.Add(new Project
+                {
+                    Id = 1337,
+                    Name = "Cool project"
+                });
+
+                db.SaveChanges();
+            }
+
+            using (var db = TestDbContextFactory.Create())
+            {
+                db.Upsert(project, entity =>
+                {
+                    switch (entity)
+                    {
+                        case ProjectDepartment pd:
+                            db.Entry(entity).Property("ProjectId").CurrentValue = project.Id;
+                            break;
+                        case ProjectRegion region:
+
+                            break;
+                    }
+                });
+
+                db.SaveChanges();
+            }
+        }
+
         [TestInitialize]
         public void Initialize()
         {

@@ -8,7 +8,14 @@
     <PackageProjectUrl>https://github.com/maitlandmarshall/MAD.Integration.Common</PackageProjectUrl>
     <RepositoryUrl>https://github.com/maitlandmarshall/MAD.Integration.Common</RepositoryUrl>
     <RepositoryType>GIT</RepositoryType>
-    <VersionPrefix>1.0.1</VersionPrefix>
+
+	<Major>1</Major>
+	<Minor>0</Minor>
+	<Build>2</Build>
+	<Revision>$([System.DateTime]::UtcNow.ToString("yyMMddHHmm"))</Revision>
+
+	<Version>$(Major).$(Minor).$(Build).$(Revision)</Version>
+	<AssemblyVersion>$(Major).$(Minor).$(Build)</AssemblyVersion>
   </PropertyGroup>
 
   <ItemGroup>
