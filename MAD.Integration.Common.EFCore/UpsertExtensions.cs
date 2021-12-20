@@ -31,14 +31,24 @@ namespace MAD.Integration.Common.EFCore
                     keySelector: y => y.Name,
                     elementSelector: x =>
                     {
+                        object result; 
+
                         if (x.PropertyInfo is null)
                         {
-                            return g.Entry.Property(x.Name).CurrentValue;
+                            result = g.Entry.Property(x.Name).CurrentValue;
                         }
                         else
                         {
-                            return x.PropertyInfo.GetValue(entity);
+                            result = x.PropertyInfo.GetValue(entity);
                         }
+
+                        if (result is DateTime dte)
+                        {
+                            // Dates are serialized by default as yyyy-MM-dd HH:mm:ss. Add more precision.
+                            result = dte.ToString("yyyy-MM-dd HH:mm:ss.fff");
+                        }
+
+                        return result;
                     });
 
                 if (entityType.IsOwned())
@@ -64,12 +74,15 @@ namespace MAD.Integration.Common.EFCore
 
         private static void AddOrUpdateEntity(this DbContext dbContext, EntityEntry entry, IEntityType entityType, IDictionary<string, object> keys)
         {
-            var tableName = entityType.GetTableName();
             var db = dbContext.GetQueryFactory();
+            var tableName = entityType.GetTableName();
 
-            var existingEntityCount = db
+            var query = db
                 .Query(tableName)
-                .Where(keys)
+                .Where(keys);
+
+            var existingEntityCount = 
+                query
                 .Count<int>();
             
             if (existingEntityCount == 0)
