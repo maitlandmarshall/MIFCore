@@ -6,7 +6,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System.Runtime.CompilerServices;
 
-[assembly: InternalsVisibleTo("MAD.Integration.Common.Tests")]
+[assembly: InternalsVisibleTo("MAD.IntegrationHost.Tests")]
 namespace MAD.Integration.Common
 {
     public class IntegrationHost

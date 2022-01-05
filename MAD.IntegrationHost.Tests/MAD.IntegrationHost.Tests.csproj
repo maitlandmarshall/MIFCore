@@ -15,7 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MAD.Integration.Common\MAD.Integration.Common.csproj" />
+    <ProjectReference Include="..\MAD.IntegrationHost\MAD.IntegrationHost.csproj" />
   </ItemGroup>
 
 </Project>
