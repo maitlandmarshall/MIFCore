@@ -1,0 +1,39 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+	<PropertyGroup>
+		<TargetFrameworks>netcoreapp3.1;net5.0;net6.0</TargetFrameworks>
+		<OutputType>Library</OutputType>
+		<Authors>Maitland Marshall</Authors>
+		<Company>MAIT DEV</Company>
+		<PackageProjectUrl>https://github.com/maitlandmarshall/MIFCore</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/maitlandmarshall/MIFCore</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+		<IsPackable>true</IsPackable>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageTags>Hangfire, Scheduling, Jobs, Simplified</PackageTags>
+		<Description>Provides an IntegrationHost which allows you to build integrations using Hangfire and AspNetCore</Description>
+		<Major>1</Major>
+		<Minor>1</Minor>
+		<Build>19</Build>
+		<Revision>$([System.DateTime]::UtcNow.ToString("MddHHmmss"))</Revision>
+
+		<Version>$(Major).$(Minor).$(Build).$(Revision)</Version>
+		<AssemblyVersion>$(Major).$(Minor).$(Build)</AssemblyVersion>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.18.0" />
+
+		<PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="3.1.7" />
+
+		<PackageReference Include="Microsoft.AspNetCore.Server.HttpSys" Version="2.2.6" />
+		<PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.2.5" />
+		<PackageReference Include="Microsoft.AspNetCore" Version="2.2.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\MIFCore.Common\MIFCore.Common.csproj" />
+	  <ProjectReference Include="..\MIFCore.Hangfire\MIFCore.Hangfire.csproj" />
+	</ItemGroup>
+
+</Project>
