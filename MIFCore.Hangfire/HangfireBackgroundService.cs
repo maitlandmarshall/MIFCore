@@ -55,7 +55,7 @@ namespace MIFCore.Hangfire
 
             var options = new SqlServerStorageOptions
             {
-                SchemaName = "job",
+                SchemaName = HangfireConfig.SchemaName,
                 PrepareSchemaIfNecessary = true
             };
 

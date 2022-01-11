@@ -1,4 +1,4 @@
-﻿namespace MIFCore.JobActions.Database
+﻿namespace MIFCore.Hangfire.JobActions.Database
 {
     public class JobAction
     {

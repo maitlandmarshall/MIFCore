@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace MIFCore.JobActions.Database
+namespace MIFCore.Hangfire.JobActions.Database
 {
     public enum JobActionTiming
     {
