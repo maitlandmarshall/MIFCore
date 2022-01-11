@@ -14,6 +14,7 @@ namespace MIFCore.TestApp
             this.backgroundJobClient = backgroundJobClient;
         }
 
+        [JobDisplayName("dogJob")]
         public void DoTheJob()
         {
             var current = BackgroundJobContext.Current;

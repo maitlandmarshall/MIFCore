@@ -17,8 +17,10 @@ namespace MIFCore.TestApp
 
         }
 
-        public void PostConfigure(IBackgroundJobClient backgroundJobClient)
+        public void PostConfigure(IBackgroundJobClient backgroundJobClient, IRecurringJobManager recurringJobManager)
         {
+            recurringJobManager.AddOrUpdate<SomeJob>("some-job", y => y.DoTheJob(), Cron.Minutely());
+
             backgroundJobClient.Enqueue<SomeJob>(y => y.DoTheJob());
             backgroundJobClient.Enqueue<SomeJob>(y => y.DoTheJobButError());
         }

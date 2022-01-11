@@ -3,6 +3,7 @@ using Hangfire.Common;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography;
@@ -46,6 +47,37 @@ namespace MIFCore.Hangfire
             return GetFingerprint(job.Type, job.Method, job.Args);
         }
 
+        public static string GetJobName(this BackgroundJob backgroundJob)
+        {
+            // Check if the job is a recurring job
+            var jobId = backgroundJob.GetJobParameter<string>("RecurringJobId");
+
+            if (string.IsNullOrWhiteSpace(jobId))
+            {
+                // If it's not, try to get the display name of the job
+                var jobDisplayNameAttribute = backgroundJob.Job.Method.GetCustomAttribute<JobDisplayNameAttribute>();
+
+                if (jobDisplayNameAttribute != null)
+                {
+                    jobId = jobDisplayNameAttribute.DisplayName;
+                }
+                else
+                {
+                    var displayNameAttribute = backgroundJob.Job.Method.GetCustomAttribute<DisplayNameAttribute>();
+                    jobId = displayNameAttribute?.DisplayName;
+                }
+            }
+
+            jobId ??= backgroundJob.Job.ToString();
+
+            return jobId;
+        }
+
+        public static DateTime? GetLastSuccess(this BackgroundJob job)
+        {
+            return job.GetJobParameter<DateTime?>(TrackLastSuccessAttribute.ParameterName);
+        }
+
         internal static string GetFingerprint(Type type, MethodInfo method, IReadOnlyList<object> args)
         {
             var hashInputBytes = new List<byte>();
@@ -70,11 +102,6 @@ namespace MIFCore.Hangfire
             }
 
             return builder.ToString();
-        }
-
-        public static DateTime? GetLastSuccess(this BackgroundJob job)
-        {
-            return job.GetJobParameter<DateTime?>(TrackLastSuccessAttribute.ParameterName);
         }
     }
 }

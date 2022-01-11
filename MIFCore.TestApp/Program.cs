@@ -1,22 +1,19 @@
 ﻿using Microsoft.Extensions.Hosting;
-using MIFCore;
 using MIFCore.Hangfire.Analytics;
+using MIFCore.Hangfire.JobActions;
 using MIFCore.Http;
-using System.Threading.Tasks;
 
 namespace MIFCore.TestApp
 {
     class Program
     {
-        static async Task Main(string[] args)
-        {
-            var host = IntegrationHost.CreateDefaultBuilder()
-                .UseStartup<Startup>()
-                .UseAspNetCore()
-                .UseAppInsights()
-                .Build();
+        public static void Main(string[] args) => CreateHostBuilder(args).Build().Run();
 
-            await host.RunAsync();
-        }
+        public static IHostBuilder CreateHostBuilder(string[] args)
+            => IntegrationHost.CreateDefaultBuilder(args)
+                .UseStartup<Startup>()
+                .UseJobActions()
+                .UseAspNetCore()
+                .UseAppInsights();
     }
 }
