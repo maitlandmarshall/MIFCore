@@ -2,24 +2,23 @@
 using Hangfire.States;
 using Microsoft.EntityFrameworkCore;
 using MIFCore.Hangfire.JobActions.Database;
-using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics;
+using System.Data.Common;
 using System.Linq;
-using System.Reflection;
-using System.Text;
 
 namespace MIFCore.Hangfire.JobActions
 {
     internal class JobActionFilter : IElectStateFilter
     {
-        private readonly IDbContextFactory<JobActionDbContext> dbContextFactory;
+        private const string RecurringJobTriggerPrefix = "recurring-job:";
 
-        public JobActionFilter(IDbContextFactory<JobActionDbContext> dbContextFactory)
+        private readonly IDbContextFactory<JobActionDbContext> dbContextFactory;
+        private readonly IRecurringJobManager recurringJobManager;
+
+        public JobActionFilter(IDbContextFactory<JobActionDbContext> dbContextFactory, IRecurringJobManager recurringJobManager)
         {
             this.dbContextFactory = dbContextFactory;
+            this.recurringJobManager = recurringJobManager;
         }
 
         public void OnStateElection(ElectStateContext context)
@@ -35,7 +34,7 @@ namespace MIFCore.Hangfire.JobActions
                     this.OnAction(context.BackgroundJob, JobActionTiming.AFTER);
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 context.CandidateState = new FailedState(ex);
             }
@@ -67,12 +66,16 @@ namespace MIFCore.Hangfire.JobActions
                 {
                     try
                     {
-                        var command = connection.CreateCommand();
-                        command.Transaction = transaction;
-                        command.CommandText = ja.Action;
-                        command.ExecuteNonQuery();
+                        if (ja.Action.StartsWith(RecurringJobTriggerPrefix))
+                        {
+                            this.TriggerRecurringJob(ja);
+                        }
+                        else
+                        {
+                            this.TriggerSqlCommand(ja, connection, transaction);
+                        }
                     }
-                    catch(Exception ex)
+                    catch (Exception ex)
                     {
                         throw new JobActionFailedException(ja, ex);
                     }
@@ -85,6 +88,20 @@ namespace MIFCore.Hangfire.JobActions
                 transaction.Rollback();
                 throw;
             }
+        }
+
+        private void TriggerSqlCommand(JobAction jobAction, DbConnection connection, DbTransaction transaction)
+        {
+            var command = connection.CreateCommand();
+            command.Transaction = transaction;
+            command.CommandText = jobAction.Action;
+            command.ExecuteNonQuery();
+        }
+
+        private void TriggerRecurringJob(JobAction jobAction)
+        {
+            var recurringJobId = jobAction.Action.Substring(jobAction.Action.IndexOf(RecurringJobTriggerPrefix) + RecurringJobTriggerPrefix.Length);
+            this.recurringJobManager.Trigger(recurringJobId);
         }
     }
 }

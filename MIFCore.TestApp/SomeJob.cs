@@ -23,6 +23,11 @@ namespace MIFCore.TestApp
             this.backgroundJobClient.Enqueue<SomeJob>(y => y.DoTheNextJob());
         }
 
+        public void TriggeredJobAction()
+        {
+            Console.WriteLine("triggered job action");
+        }
+
         public async Task DoTheNextJob()
         {
             var current = BackgroundJobContext.Current;

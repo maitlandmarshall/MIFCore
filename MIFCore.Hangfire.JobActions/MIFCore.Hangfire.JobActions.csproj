@@ -2,10 +2,20 @@
 
 	<PropertyGroup>
 		<TargetFramework>netstandard2.1</TargetFramework>
+		<Authors>Maitland Marshall</Authors>
+		<Company>MAIT DEV</Company>
+		<PackageProjectUrl>https://github.com/maitlandmarshall/MIFCore</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/maitlandmarshall/MIFCore</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+		<IsPackable>true</IsPackable>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageTags>Hangfire, Scheduling, Jobs, Simplified</PackageTags>
+		<Description>An add-on to MIFCore which allows users to trigger MSSQL stored procedures or Hangfire recurring jobs, BEFORE or AFTER a job.</Description>
+		
 		<Major>1</Major>
 		<Minor>0</Minor>
-		<Build>0</Build>
-		<Revision>$([System.DateTime]::UtcNow.ToString("MddHHmmss"))</Revision>
+		<Build>1</Build>
+		<Revision>0</Revision>
 
 		<Version>$(Major).$(Minor).$(Build).$(Revision)</Version>
 		<AssemblyVersion>$(Major).$(Minor).$(Build)</AssemblyVersion>

@@ -9,6 +9,7 @@ namespace MIFCore.Hangfire.JobActions
         {
             serviceDescriptors.AddDbContext<JobActionDbContext>();
             serviceDescriptors.AddDbContextFactory<JobActionDbContext>();
+            serviceDescriptors.AddSingleton<JobActionFilter>();
 
             return serviceDescriptors;
         }
