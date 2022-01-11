@@ -1,6 +1,4 @@
-﻿using Hangfire.Common;
-using Hangfire.States;
-using System;
+﻿using Hangfire.States;
 
 namespace MAD.Integration.Common.Jobs
 {
@@ -16,7 +14,10 @@ namespace MAD.Integration.Common.Jobs
             if (failedState.Exception is RescheduleJobException exception)
             {
                 context.SetJobParameter("RetryCount", 0);
-                context.CandidateState = new ScheduledState(exception.RescheduleDate) { Reason = $"Job has been rescheduled for {exception.RescheduleDate.ToLocalTime():dd/MM/yyyy HH:mm:ss}" };
+                context.CandidateState = new ScheduledState(exception.RescheduleDate) 
+                { 
+                    Reason = $"Job has been rescheduled for {exception.RescheduleDate.ToLocalTime():dd/MM/yyyy HH:mm:ss}" 
+                };
             }
         }
     }
