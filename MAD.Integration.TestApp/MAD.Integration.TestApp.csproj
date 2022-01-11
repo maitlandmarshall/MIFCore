@@ -11,7 +11,7 @@
 
   <ItemGroup>
     <Content Include="settings.default.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
 

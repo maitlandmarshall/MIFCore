@@ -1,5 +1,5 @@
 ﻿using Hangfire;
-using MAD.Integration.Common.Jobs;
+using MAD.Integration.Common.Settings;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace MAD.Integration.TestApp
@@ -19,7 +19,8 @@ namespace MAD.Integration.TestApp
 
         public void PostConfigure(IBackgroundJobClient backgroundJobClient)
         {
-            backgroundJobClient.Enqueue<SomeJob>(y => y.DoTheJob());
+            //backgroundJobClient.Enqueue<SomeJob>(y => y.DoTheJob());
+            backgroundJobClient.Enqueue<SomeJob>(y => y.DoTheJobButError());
         }
     }
 }

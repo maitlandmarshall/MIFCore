@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace MAD.Integration.TestApp
-{
+{    
     public class SomeJob
     {
         private readonly IBackgroundJobClient backgroundJobClient;
@@ -31,5 +31,13 @@ namespace MAD.Integration.TestApp
             await Task.Delay(100);
             Console.WriteLine("yees2");
         }
+
+        [RescheduleJobByDateOnException]
+        public async Task DoTheJobButError()
+        {           
+            await Task.Delay(100);
+
+            throw new RescheduleJobException(DateTime.Now.AddMinutes(2));
+        }        
     }
 }
