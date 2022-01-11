@@ -16,8 +16,8 @@ namespace MIFCore.Hangfire
 
             if (failedState.Exception is RescheduleJobException exception)
             {
-                var rescheduleJobDate = exception.RescheduleDate;
-                var ticks = (rescheduleJobDate - DateTime.Now).Ticks;
+                var rescheduleJobDate = exception.RescheduleDate.ToUniversalTime();
+                var ticks = (rescheduleJobDate - DateTime.UtcNow).Ticks;
                 var rescheduleSpan = TimeSpan.FromTicks(ticks);
 
                 context.SetJobParameter("RetryCount", 0);
