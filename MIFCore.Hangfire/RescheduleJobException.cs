@@ -4,7 +4,7 @@ namespace MIFCore.Hangfire
 {
     public class RescheduleJobException : Exception
     {
-        public DateTime RescheduleDate;
+        public DateTime RescheduleDate { get; set; }
 
         public RescheduleJobException(DateTime rescheduleDate)
         {
