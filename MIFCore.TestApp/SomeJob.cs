@@ -29,5 +29,12 @@ namespace MIFCore.TestApp
             await Task.Delay(100);
             Console.WriteLine("yees2");
         }
+
+        public async Task DoTheJobButError()
+        {
+            await Task.Delay(100);
+
+            throw new RescheduleJobException(DateTime.Now.AddMinutes(2));
+        }
     }
 }
