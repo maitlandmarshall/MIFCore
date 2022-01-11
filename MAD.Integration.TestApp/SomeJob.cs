@@ -31,8 +31,7 @@ namespace MAD.Integration.TestApp
             await Task.Delay(100);
             Console.WriteLine("yees2");
         }
-
-        [RescheduleJobByDateOnException]
+        
         public async Task DoTheJobButError()
         {           
             await Task.Delay(100);
