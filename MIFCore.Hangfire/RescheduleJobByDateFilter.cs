@@ -16,13 +16,8 @@ namespace MIFCore.Hangfire
 
             if (failedState.Exception is RescheduleJobException exception)
             {
-                var rescheduleJobDate = exception.RescheduleDate.ToUniversalTime();
-                var ticks = (rescheduleJobDate - DateTime.UtcNow).Ticks;
-                var rescheduleSpan = TimeSpan.FromTicks(ticks);
-
                 context.SetJobParameter("RetryCount", 0);
-
-                context.CandidateState = new ScheduledState(rescheduleSpan) { Reason = $"Job has been rescheduled for {rescheduleJobDate.ToLocalTime():dd/MM/yyyy HH:mm:ss}" };
+                context.CandidateState = new ScheduledState(exception.RescheduleDate) { Reason = $"Job has been rescheduled for {exception.RescheduleDate.ToLocalTime():dd/MM/yyyy HH:mm:ss}" };
             }
         }
     }
