@@ -338,4 +338,4 @@ ASALocalRun/
 
 # BeatPulse healthcheck temp database
 healthchecksdb
-/MAD.IntegrationHost.TestApp/settings.default.json
+/MIFCore.TestApp/settings.default.json

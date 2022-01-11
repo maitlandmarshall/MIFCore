@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>netstandard2.1</TargetFramework>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\MIFCore.Common\MIFCore.Common.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Hangfire.AspNetCore" Version="1.7.24" />
+		<PackageReference Include="Hangfire.Core" Version="1.7.24" />
+		<PackageReference Include="Hangfire.MAMQSqlExtension" Version="1.0.5" />
+		<PackageReference Include="Hangfire.SqlServer" Version="1.7.24" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="6.0.0" />
+
+		<PackageReference Include="Microsoft.ApplicationInsights.DependencyCollector" Version="2.18.0" />
+		<PackageReference Include="Microsoft.ApplicationInsights.PerfCounterCollector" Version="2.18.0" />
+	</ItemGroup>
+</Project>
