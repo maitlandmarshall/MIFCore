@@ -36,7 +36,7 @@ namespace MAD.Integration.TestApp
         {           
             await Task.Delay(100);
 
-            throw new RescheduleJobException(DateTime.Now.AddMinutes(2));
+            throw new RescheduleJobException(DateTimeOffset.UtcNow.AddMinutes(2).DateTime);
         }        
     }
 }
