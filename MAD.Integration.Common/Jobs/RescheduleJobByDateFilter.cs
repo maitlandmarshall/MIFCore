@@ -4,12 +4,8 @@ using System;
 
 namespace MAD.Integration.Common.Jobs
 {
-    public class RescheduleJobByDateOnExceptionAttribute : JobFilterAttribute, IElectStateFilter
+    public class RescheduleJobByDateFilter : IElectStateFilter
     {
-        public RescheduleJobByDateOnExceptionAttribute()
-        {
-        }
-
         public void OnStateElection(ElectStateContext context)
         {
             var failedState = context.CandidateState as FailedState;

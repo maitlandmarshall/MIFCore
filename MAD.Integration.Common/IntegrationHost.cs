@@ -26,6 +26,7 @@ namespace MAD.Integration.Common
                 {
                     globalHangfireConfig.UseRecommendedSerializerSettings();
                     globalHangfireConfig.UseFilter(new BackgroundJobContext());
+                    globalHangfireConfig.UseFilter(new RescheduleJobByDateFilter());
                 });
         }
 
