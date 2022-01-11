@@ -14,12 +14,13 @@ namespace MIFCore.TestApp
 
         public void Configure()
         {
-            
+
         }
 
         public void PostConfigure(IBackgroundJobClient backgroundJobClient)
         {
             backgroundJobClient.Enqueue<SomeJob>(y => y.DoTheJob());
+            backgroundJobClient.Enqueue<SomeJob>(y => y.DoTheJobButError());
         }
     }
 }

@@ -23,6 +23,7 @@ namespace MIFCore
                 {
                     globalHangfireConfig.UseRecommendedSerializerSettings();
                     globalHangfireConfig.UseFilter(new BackgroundJobContext());
+                    globalHangfireConfig.UseFilter(new RescheduleJobByDateFilter());
                 });
         }
 
