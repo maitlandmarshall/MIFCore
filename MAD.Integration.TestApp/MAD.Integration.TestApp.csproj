@@ -11,8 +11,12 @@
 
   <ItemGroup>
     <Content Include="settings.default.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Hangfire.MemoryStorage" Version="1.7.0" />
   </ItemGroup>
 
   <ItemGroup>
