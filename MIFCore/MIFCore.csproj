@@ -13,8 +13,8 @@
 		<PackageTags>Hangfire, Scheduling, Jobs, Simplified</PackageTags>
 		<Description>Provides an IntegrationHost which allows you to build integrations using Hangfire and AspNetCore</Description>
 		<Major>1</Major>
-		<Minor>1</Minor>
-		<Build>19</Build>
+		<Minor>0</Minor>
+		<Build>0</Build>
 		<Revision>$([System.DateTime]::UtcNow.ToString("MddHHmmss"))</Revision>
 
 		<Version>$(Major).$(Minor).$(Build).$(Revision)</Version>

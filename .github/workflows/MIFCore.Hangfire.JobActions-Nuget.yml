@@ -6,7 +6,7 @@ on:
   push:
     branches: [ master ]
     paths:
-    - 'MAD.Integration.Common/**'
+    - 'MIFCore.Hangfire.JobActions/**'
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -27,12 +27,12 @@ jobs:
         with:          
           dotnet-version: '6.0.x' # SDK Version to use.          
       - name: Restore dependencies
-        run: dotnet restore MAD.Integration.Common
+        run: dotnet restore MIFCore.Hangfire.JobActions
       - name: Build
-        run: dotnet build MAD.Integration.Common --no-restore
+        run: dotnet build MIFCore.Hangfire.JobActions --no-restore
       - name: Test
-        run: dotnet test MAD.Integration.Common --no-build --verbosity normal
+        run: dotnet test MIFCore.Hangfire.JobActions --no-build --verbosity normal
       - name: Pack
-        run: dotnet pack --configuration Release MAD.Integration.Common
+        run: dotnet pack --configuration Release MIFCore.Hangfire.JobActions
       - name: Publish the package to nuget.org
-        run: dotnet nuget push */bin/Release/*.nupkg -k ${{ secrets.NUGET_AUTH_TOKEN }} -s https://api.nuget.org/v3/index.json
+        run: dotnet nuget push */bin/Release/*.nupkg -k ${{ secrets.MIFCORE_HANGFIRE_JOBACTIONS_NUGET_AUTH_TOKEN }} -s https://api.nuget.org/v3/index.json

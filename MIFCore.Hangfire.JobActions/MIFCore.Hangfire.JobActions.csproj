@@ -2,6 +2,13 @@
 
 	<PropertyGroup>
 		<TargetFramework>netstandard2.1</TargetFramework>
+		<Major>1</Major>
+		<Minor>0</Minor>
+		<Build>0</Build>
+		<Revision>$([System.DateTime]::UtcNow.ToString("MddHHmmss"))</Revision>
+
+		<Version>$(Major).$(Minor).$(Build).$(Revision)</Version>
+		<AssemblyVersion>$(Major).$(Minor).$(Build)</AssemblyVersion>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -10,7 +17,10 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="5.0.13" />
-		<PackageReference Include="Hangfire.Core" Version="1.7.24" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\MIFCore.Hangfire\MIFCore.Hangfire.csproj" />
 	</ItemGroup>
 
 </Project>
