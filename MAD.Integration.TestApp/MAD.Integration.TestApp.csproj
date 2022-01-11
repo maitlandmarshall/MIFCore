@@ -16,10 +16,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Hangfire.MemoryStorage" Version="1.7.0" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\MAD.Integration.Common\MAD.Integration.Common.csproj" />
   </ItemGroup>
 
