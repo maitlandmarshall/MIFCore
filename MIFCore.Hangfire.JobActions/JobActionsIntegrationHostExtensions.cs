@@ -22,7 +22,7 @@ namespace MIFCore.Hangfire.JobActions
         private static void StartupHandler_PostConfigureActions(IServiceProvider serviceProvider)
         {
             var globalConfig = serviceProvider.GetRequiredService<IGlobalConfiguration>();
-            globalConfig.UseFilter(new JobActionFilter(serviceProvider.GetRequiredService<IDbContextFactory<JobActionDbContext>>()));
+            globalConfig.UseFilter(serviceProvider.GetRequiredService<JobActionFilter>());
 
             var dbContext = serviceProvider.GetRequiredService<JobActionDbContext>();
             dbContext.Database.Migrate();

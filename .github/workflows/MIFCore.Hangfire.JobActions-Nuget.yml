@@ -35,4 +35,4 @@ jobs:
       - name: Pack
         run: dotnet pack --configuration Release MIFCore.Hangfire.JobActions
       - name: Publish the package to nuget.org
-        run: dotnet nuget push */bin/Release/*.nupkg -k ${{ secrets.MIFCORE_HANGFIRE_JOBACTIONS_NUGET_AUTH_TOKEN }} -s https://api.nuget.org/v3/index.json
+        run: dotnet nuget push */bin/Release/*.nupkg -k ${{ secrets.NUGET_AUTH_TOKEN }} -s https://api.nuget.org/v3/index.json

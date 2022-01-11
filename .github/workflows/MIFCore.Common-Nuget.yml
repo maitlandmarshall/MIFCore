@@ -6,7 +6,7 @@ on:
   push:
     branches: [ master ]
     paths:
-    - 'MIFCore/**'
+    - 'MIFCore.Common/**'
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -27,12 +27,12 @@ jobs:
         with:          
           dotnet-version: '6.0.x' # SDK Version to use.          
       - name: Restore dependencies
-        run: dotnet restore MIFCore
+        run: dotnet restore MIFCore.Common
       - name: Build
-        run: dotnet build MIFCore --no-restore
+        run: dotnet build MIFCore.Common --no-restore
       - name: Test
-        run: dotnet test MIFCore --no-build --verbosity normal
+        run: dotnet test MIFCore.Common --no-build --verbosity normal
       - name: Pack
-        run: dotnet pack --configuration Release MIFCore
+        run: dotnet pack --configuration Release MIFCore.Common
       - name: Publish the package to nuget.org
         run: dotnet nuget push */bin/Release/*.nupkg -k ${{ secrets.NUGET_AUTH_TOKEN }} -s https://api.nuget.org/v3/index.json
