@@ -19,6 +19,7 @@ namespace MIFCore.Hangfire
             serviceDescriptors.AddSingleton(hangfireConfig);
 
             serviceDescriptors.AddHangfire(configuration: cfg => configureDelegate?.Invoke(cfg, hangfireConfig));
+            serviceDescriptors.AddTransient<JobStorageFactory>();
 
             return serviceDescriptors;
         }

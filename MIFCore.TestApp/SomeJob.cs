@@ -15,6 +15,7 @@ namespace MIFCore.TestApp
         }
 
         [JobDisplayName("dogJob")]
+        [DisableConcurrentExecution(1000)]
         public void DoTheJob()
         {
             var current = BackgroundJobContext.Current;
