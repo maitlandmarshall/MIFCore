@@ -1,4 +1,4 @@
-name: Nuget Publish MIFCore
+name: Nuget MIFCore
 
 # Controls when the workflow will run
 on:

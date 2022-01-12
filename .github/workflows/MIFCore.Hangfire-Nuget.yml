@@ -1,4 +1,4 @@
-name: Nuget Publish MIFCore.Hangfire
+name: Nuget MIFCore.Hangfire
 
 # Controls when the workflow will run
 on:
