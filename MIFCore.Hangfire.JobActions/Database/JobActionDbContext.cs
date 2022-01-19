@@ -4,7 +4,7 @@ using MIFCore.Hangfire;
 
 namespace MIFCore.Hangfire.JobActions.Database
 {
-    public class JobActionDbContext : DbContext
+    internal class JobActionDbContext : DbContext
     {
         private readonly HangfireConfig hangfireConfig;
 

@@ -1,10 +1,13 @@
 ﻿using Hangfire;
+using Hangfire.SqlServer;
 using Hangfire.States;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using MIFCore.Hangfire.JobActions.Database;
 using System;
 using System.Data.Common;
 using System.Linq;
+using System.Transactions;
 
 namespace MIFCore.Hangfire.JobActions
 {
@@ -13,12 +16,20 @@ namespace MIFCore.Hangfire.JobActions
         private const string RecurringJobTriggerPrefix = "recurring-job:";
 
         private readonly IDbContextFactory<JobActionDbContext> dbContextFactory;
-        private readonly IRecurringJobManager recurringJobManager;
+        private readonly IRecurringJobManagerFactory recurringJobManagerFactory;
+        private readonly HangfireConfig hangfireConfig;
+        private readonly JobStorageFactory jobStorageFactory;
 
-        public JobActionFilter(IDbContextFactory<JobActionDbContext> dbContextFactory, IRecurringJobManager recurringJobManager)
+        public JobActionFilter(
+            IDbContextFactory<JobActionDbContext> dbContextFactory,
+            IRecurringJobManagerFactory recurringJobManagerFactory,
+            HangfireConfig hangfireConfig,
+            JobStorageFactory jobStorageFactory)
         {
             this.dbContextFactory = dbContextFactory;
-            this.recurringJobManager = recurringJobManager;
+            this.recurringJobManagerFactory = recurringJobManagerFactory;
+            this.hangfireConfig = hangfireConfig;
+            this.jobStorageFactory = jobStorageFactory;
         }
 
         public void OnStateElection(ElectStateContext context)
@@ -55,10 +66,8 @@ namespace MIFCore.Hangfire.JobActions
             if (jobActions.Any() == false)
                 return;
 
-            var connection = dbContext.Database.GetDbConnection();
-            connection.Open();
-
-            using var transaction = connection.BeginTransaction();
+            // Start a transaction scope so all transactions, including cross-database transactions are included
+            using var transactionScope = new TransactionScope();
 
             try
             {
@@ -72,7 +81,7 @@ namespace MIFCore.Hangfire.JobActions
                         }
                         else
                         {
-                            this.TriggerSqlCommand(ja, connection, transaction);
+                            this.TriggerSqlCommand(ja);
                         }
                     }
                     catch (Exception ex)
@@ -81,27 +90,58 @@ namespace MIFCore.Hangfire.JobActions
                     }
                 }
 
-                transaction.Commit();
+                transactionScope.Complete();
             }
             catch (Exception)
             {
-                transaction.Rollback();
                 throw;
             }
         }
 
-        private void TriggerSqlCommand(JobAction jobAction, DbConnection connection, DbTransaction transaction)
+        private void TriggerSqlCommand(JobAction jobAction)
         {
+            using var connection = this.GetOpenConnection(jobAction.Database);
+
             var command = connection.CreateCommand();
-            command.Transaction = transaction;
             command.CommandText = jobAction.Action;
             command.ExecuteNonQuery();
         }
 
         private void TriggerRecurringJob(JobAction jobAction)
         {
+            var recurringJobManager = this.GetRecurringJobManager(jobAction.Database);
             var recurringJobId = jobAction.Action.Substring(jobAction.Action.IndexOf(RecurringJobTriggerPrefix) + RecurringJobTriggerPrefix.Length);
-            this.recurringJobManager.Trigger(recurringJobId);
+
+            recurringJobManager.Trigger(recurringJobId);
+        }
+
+        private DbConnection GetOpenConnection(string databaseName = null)
+        {
+            var connection = new SqlConnection(this.GetConnectionString(databaseName));
+            connection.Open();
+
+            return connection;
+        }
+
+        private string GetConnectionString(string databaseName = null)
+        {
+            var builder = new SqlConnectionStringBuilder(this.hangfireConfig.ConnectionString);
+
+            // If the databaseName is blank, use the default connectionString provided in the config
+            if (string.IsNullOrWhiteSpace(databaseName) == false)
+            {
+                builder.InitialCatalog = databaseName;
+            }
+
+            return builder.ConnectionString;
+        }
+
+        IRecurringJobManager GetRecurringJobManager(string databaseName = null)
+        {
+            var connectionString = this.GetConnectionString(databaseName);
+            var jobStorage = this.jobStorageFactory.Create(connectionString, "default");
+
+            return this.recurringJobManagerFactory.GetManager(jobStorage);
         }
     }
 }

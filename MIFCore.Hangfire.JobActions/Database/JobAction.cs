@@ -9,5 +9,7 @@
         public uint Order { get; set; }
 
         public bool IsEnabled { get; set; }
+
+        public string Database { get; set; }
     }
 }

@@ -17,14 +17,16 @@ namespace MIFCore.Hangfire
         private readonly ILifetimeScope rootScope;
         private readonly HangfireConfig hangfireConfig;
         private readonly StartupHandler startupHandler;
+        private readonly JobStorageFactory jobStorageFactory;
 
         internal static ILifetimeScope ServiceScope { get; private set; }
 
-        public HangfireBackgroundService(ILifetimeScope rootScope, HangfireConfig hangfireConfig, StartupHandler startupHandler)
+        public HangfireBackgroundService(ILifetimeScope rootScope, HangfireConfig hangfireConfig, StartupHandler startupHandler, JobStorageFactory jobStorageFactory)
         {
             this.rootScope = rootScope;
             this.hangfireConfig = hangfireConfig;
             this.startupHandler = startupHandler;
+            this.jobStorageFactory = jobStorageFactory;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -53,13 +55,7 @@ namespace MIFCore.Hangfire
         {
             await this.startupHandler.CreateDatabaseIfNotExist(this.hangfireConfig.ConnectionString);
 
-            var options = new SqlServerStorageOptions
-            {
-                SchemaName = HangfireConfig.SchemaName,
-                PrepareSchemaIfNecessary = true
-            };
-
-            var jobStorage = new MAMQSqlServerStorage(this.hangfireConfig.ConnectionString, options, this.hangfireConfig.Queues ?? JobQueue.Queues);
+            var jobStorage = this.jobStorageFactory.Create(this.hangfireConfig.ConnectionString, this.hangfireConfig.Queues ?? JobQueue.Queues);
             JobStorage.Current = jobStorage;
         }
     }
