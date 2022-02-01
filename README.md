@@ -194,12 +194,64 @@ The binding configuration within the application is used primarily in the `Integ
 
 ### Job Actions
 
+Job Actions provides you with the ability to create an execution order for custom sql commands and recurring jobs. To enable Job Actions, run the `.UseJobActions()` extension method on the `IntegrationHostBuilder` during startup:
+
+```csharp
+IntegrationHost.CreateDefaultBuilder(args)
+    .UseStartup<Startup>()
+    .UseJobActions();
+}
+```
+
+Once enabled, MIFCore will automatically create the `JobActions` table in database configured in your `ConnectionString`. This table will use the same schema ("job") as the Hangfire sql tables.
+
+The `job.JobActions` table consists of the following columns:
+
+* `JobName` The name of the job you wish to trigger the action.
+* `Action` The sql command or recurring job id you wish to execute for the action.
+* `Order` The sequence number for this action.
+* `Timing` Must be set to `BEFORE` or `AFTER`. Specifies whether action should be run before or after the job.
+* `IsEnabled` Specifies whether this action is enabled.
+* `Database` Specifies which sql database this action should be run against.
+
+To create some Job Actions, register your required recurring jobs in the application startup class:
+
+```csharp
+public void PostConfigure(IRecurringJobFactory recurringJobFactory)
+{
+    recurringJobFactory.CreateRecurringJob<MyRecurringJob>("MyJob", y => y.RunMyJob(), Cron.Daily());
+    recurringJobFactory.CreateRecurringJob<MyRecurringJob>("MyOtherJob", y => y.RunMyOtherJob(), Cron.Daily());
+}
+```
+
+Then, manually insert the required job actions records into the `job.JobActions` table in SQL ensuring to use the same `JobName` as the recurring job you registered in the previous step:
+
+```sql
+INSERT [job].[JobActions] ([JobName],[Action],[Order],[Timing],[IsEnabled],[Database])
+VALUES ('MyJob', 'EXECUTE [dbo].[MyStoredProc]', 1, 'BEFORE', 1, 'MyOtherDatabase')
+GO
+
+INSERT [job].[JobActions] ([JobName],[Action],[Order],[Timing],[IsEnabled])
+VALUES ('MyJob', 'recurring-job:MyOtherJob', 2, 'AFTER', 1)
+GO
+```
+
+In the section above, the first action will execute a sql command of `EXECUTE [dbo].[MyStoredProc]` against the 'MyOtherDatabase' database before the recurring job 'MyJob' has been executed. Then, a second action will be run to trigger the 'MyOtherJob' recurring job after the original job 'MyJob' has been executed.
+
+The `recurring-job:` prefix is required on the action in order to execute an existing recurring job. The format of the action should be `recurring-job:{RecurringJobName}`. By default, Job Actions will be executed against the database configured in the `ConnectionString` property of the `settings.json` file.
+
 ### Recurring Job Factory
 
-The `IRecurringJobFactory` class should be used when registering your recurring jobs in MIFCore. When a new job is registered, the `IRecurringJobFactory` will check for any CRON overrides specifies in the `settings.json`, create or update your job in Hangfire and immediately trigger the job if it has not been run previously.
+The `IRecurringJobFactory` class should be used when registering your recurring jobs in MIFCore. When a new job is registered, the `IRecurringJobFactory` will check for any CRON overrides specifies in the `settings.json` and create or update your job in Hangfire.
 
 ```csharp
 recurringJobFactory.CreateRecurringJob<MyRecurringJob>("MyJobName", y => y.RunMyJob(), Cron.Daily());
+```
+
+Set the `triggerIfNeverExecuted` parameter to true if you need Hangfire to trigger the job if it has not been run previously:
+
+```csharp
+recurringJobFactory.CreateRecurringJob<MyRecurringJob>("MyJobName", y => y.RunMyJob(), Cron.Daily(), triggerIfNeverExecuted: true);
 ```
 
 #### Overriding Recurring Job Schedules
@@ -215,7 +267,7 @@ If an override is added while the application is running, restart the applicatio
 
 ### Batch Context Filter
 
-The `BatchContextFilter` is a global [IClientFilter](https://docs.hangfire.io/en/latest/extensibility/using-job-filters.html)/[IServerFilter](https://docs.hangfire.io/en/latest/extensibility/using-job-filters.html) that allows you to easily identify group a of jobs using an `Id` and a `Started` job parameter. When a job is executed with the `BatchContextFilter` hangfire filter active, a new Guid will be created for the `Id` parameter and the current Utc date will be retrieved for the `Started` parameter. These values are then stored against the context of the job.
+The `BatchContextFilter` is a global [IClientFilter](https://docs.hangfire.io/en/latest/extensibility/using-job-filters.html)/[IServerFilter](https://docs.hangfire.io/en/latest/extensibility/using-job-filters.html) that can be added during the startup of your application. When a job is executed with the `BatchContextFilter` hangfire filter active, a new Guid will be created for an `Id` batch parameter and the current Utc date will be retrieved for the `Started` batch parameter. These values are then stored against the context of the job along with any other custom batch parameters added during job execution.
 
 For any nested jobs that are queued during the execution of this initial job, the `Id` and `Started` parameters can be accessed by using the [BackgroundJobContext](#backgroundjobcontext):
 
@@ -247,7 +299,7 @@ public class MyRecurringJobType
 
     public void NestedJob2()
     {
-            var batchId = BackgroundJobContext.Current.GetBatchParameter<Guid>("Id");
+        var batchId = BackgroundJobContext.Current.GetBatchParameter<Guid>("Id");
         var started = BackgroundJobContext.Current.GetBatchParameter<DateTime>("Started");
         var myValue = BackgroundJobContext.Current.SetBatchParameter<string>("MyRootBatchParameter");
     }
