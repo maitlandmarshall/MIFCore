@@ -13,11 +13,13 @@ MIFCore is a framework that leverages the job scheduling power of Hangfire and t
   * [CreateDefaultBuilder](#createdefaultbuilder)  
   * [Using AspNetCore](#using-aspnetcore)
   * [Using AppInsights](#using-appinsights)
-* [Application Startup](#application-startup)
+  * [Application Startup](#application-startup)
 * [Configuration](#configuration)
+  * [Global Default Configuration](#global-default-configuration)
   * [Bindings](#bindings)
   * [Overriding Recurring Job Schedules](#overriding-recurring-job-schedules)
 * [Job Actions](#job-actions)
+* [RecurringJobFactory](#recurring-job-factory)
 * [Batch Context Filter](#batch-context-filter)
 * [Reschedule Job By Date Filter](#reschedule-job-by-date-filter) 
 * [BackgroundJobContext](#backgroundjobcontext) 
@@ -49,12 +51,16 @@ IntegrationHost.CreateDefaultBuilder(args)
 
 By default, the `IntegrationHost.CreateDefaultBuilder()` method will add Hangfire and attempt to create the SQL database configured in the `ConnectionString` property of the `settings.json` file if it does not exist. MIFCore will then initialise the necessary Hangfire JobStorage using GeXiaoguo's [MAMQSqlServerStorage](https://github.com/GeXiaoguo/Hangfire.MAMQSqlExtension) extension. The Hangfire database tables will be created with the schema name "job".
 
+The CreateDefaultBuilder method will register the following filters to the global Hangfire configuration:
 
+* [BackgroundJobContext](#backgroundjobcontext)
+* [RescheduleJobByDateFilter](#reschedule-job-by-date-filter)
 
+And, register the [RecurringJobFactory](#recurring-job-factory), which is MIFCore's version of the Hangfire `RecurringJobManager`.
 
 Additionally, the following methods from the [Microsoft.Extensions.Hosting](https://docs.microsoft.com/en-us/dotnet/api/microsoft.extensions.hosting?view=dotnet-plat-ext-6.0) namespace are also available in the IntegrationHostBuilder:.
 
-* [ConfigureServices(Action\<IServiceCollection\>](https://docs.microsoft.com/en-us/dotnet/api/microsoft.extensions.hosting.ihostbuilder.configurehostconfiguration?view=dotnet-plat-ext-6.0#microsoft-extensions-hosting-ihostbuilder-configurehostconfiguration(system-action((microsoft-extensions-configuration-iconfigurationbuilder))))
+* [ConfigureServices(Action\<IServiceCollection\>)](https://docs.microsoft.com/en-us/dotnet/api/microsoft.extensions.hosting.ihostbuilder.configurehostconfiguration?view=dotnet-plat-ext-6.0#microsoft-extensions-hosting-ihostbuilder-configurehostconfiguration(system-action((microsoft-extensions-configuration-iconfigurationbuilder))))
 * [ConfigureHostConfiguration(Action\<IConfigurationBuilder\>)](https://docs.microsoft.com/en-us/dotnet/api/microsoft.extensions.hosting.ihostbuilder.configurehostconfiguration?view=dotnet-plat-ext-6.0#microsoft-extensions-hosting-ihostbuilder-configurehostconfiguration(system-action((microsoft-extensions-configuration-iconfigurationbuilder))))
 * [ConfigureAppConfiguration(Action\<HostBuilderContext, IConfigurationBuilder\>)](https://docs.microsoft.com/en-us/dotnet/api/microsoft.extensions.hosting.hostbuilder.configureappconfiguration?view=dotnet-plat-ext-6.0#microsoft-extensions-hosting-hostbuilder-configureappconfiguration(system-action((microsoft-extensions-hosting-hostbuildercontext-microsoft-extensions-configuration-iconfigurationbuilder))))
 
@@ -82,7 +88,7 @@ public class HelloWorldController : Controller
 }
 ```    
 
-[![alt text](https://github.com/anthonypos/MIFCore/blob/master/image.jpg?raw=true)]
+![alt text](https://github.com/maitlandmarshall/MIFCore/blob/master/helloworld.jpg?raw=true)
 
 #### Using AppInsights
 
@@ -103,13 +109,8 @@ MIFCore will attempt to retrieve the configured `InstrumentationKey` property fr
 * Job Arguments
 * Exception Info
 
-### Configuration
-
-#### Bindings
-
-#### Overriding Recurring Job Schedules
-
-### Application Startup
+#### Application Startup
+When using MIFCore, the startup of the application goes through 3 stages - the `ConfigureServices`, `Configure` and `PostConfigure` methods:
 
 ```csharp
 class Startup
@@ -119,19 +120,63 @@ class Startup
         // Executed before anything is initialised / configured in the application
     }
 
-    public void Configure(IGlobalConfiguration hangfireGlobalConfig)
+    public void Configure()
     {
         // Executed after the ConfigureServices method has run and after the IHost is built
     }
 
-    public void PostConfigure(MyDbContext dbContext, IRecurringJobManager recurringJobManager)
+    public void PostConfigure()
     {        
         // Executed after everything has been initialised and the IHost.Run() method is called
     }
 }
 ```
 
+The `ConfigureServices` method works the same as the standard `ConfigureServices` method in a .NET Core app and should be used to register/initialise the dependencies for the application. It is executed before anything has been initialised in the application.
+
+```csharp
+public void ConfigureServices(IServiceCollection services)
+{
+    services.AddIntegrationSettings<MyConfig>();
+    services.AddDbContext<MyDbContext>((svc, builder) => builder.UseSqlServer(svc.GetRequiredService<MyConfig>().ConnectionString));
+    services.AddScoped<MyRecurringJob>();
+}
+```
+
+For information regarding `services.AddIntegrationSetting<MyConfig>();` see [Configuration](#configuration).
+
+The `Configure` method is executed after the `IHost` has been built and the dependencies registered in the `ConfigureServices` method have been initialised. This method is useful for performing any other functionality required before the application `IHost.Run()` method is called e.g. registering custom global Hangfire configuration:
+
+```csharp
+public void Configure(IGlobalConfiguration hangfireGlobalConfig, MyConfig myConfig)
+{
+    hangfireGlobalConfig.Queues = new[] { myConfig.MyQueueName, "default" };
+    hangfireGlobalConfig.UseFilter(new MyCoolFilter());
+}
+```
+
+The `PostConfigure` method is executed after the above methods have finished and the `IHost.Run()` method has been called. This method can be used for running any other startup functionality required e.g. running migrations for your DbContext, registering your recurring Hangfire jobs or executing a job immediately:
+
+```csharp
+public void PostConfigure(MyDbContext myDbContext, MyConfig myConfig, IRecurringJobFactory recurringJobFactory)
+{
+    myDbContext.Database.Migrate();
+
+    recurringJobFactory.CreateRecurringJob<MyRecurringJob>("MyJobName", y => y.RunMyJob(), Cron.Daily(), myConfig.MyQueueName);
+}
+```
+
+### Configuration
+
+#### Global Default Configuration
+
+#### Bindings
+
+#### Overriding Recurring Job Schedules
+
 ### Job Actions
+
+### Recurring Job Factory
 
 ### Batch Context Filter
 
@@ -181,7 +226,7 @@ public void MyRecurringJobMethod()
 }
 ```
 
-By default, jobs that fail will be excluded from this filter however they can be included by setting the `IncludeFailedJobs` parameter to true on the attribute if required:
+By default, jobs that fail will be excluded from this filter however they can be included by setting the `IncludeFailedJobs` parameter to true:
 
 ```csharp
 [DisableIdenticalQueuedItems(FingerprintTimeoutMinutes = 10, IncludeFailedJobs = true)]
@@ -190,7 +235,7 @@ public void MyRecurringJobMethod()
 
 ### Track Last Success Attribute
 
-Each time a job with the `TrackLastSuccess` attribute is successfully executed, the current date time will be stored as a parameter on the job. To access the last successful run date, use the `GetLastSuccess` method in the `BackgroundJobContext` to retrieve the "LastSuccess" value.
+Each time a job with the `TrackLastSuccess` attribute is successfully executed, the current date time will be stored as a parameter on the job. To access the last successful run date, use the `BackgroundJob.GetLastSuccess()` method in the `BackgroundJobContext` to retrieve the "LastSuccess" value.
 
 ```csharp
 [TrackLastSuccess]
