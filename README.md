@@ -299,7 +299,7 @@ If an override is added while the application is running, restart the applicatio
 
 The `BatchContextFilter` is a global [IClientFilter](https://docs.hangfire.io/en/latest/extensibility/using-job-filters.html)/[IServerFilter](https://docs.hangfire.io/en/latest/extensibility/using-job-filters.html) that can be added during the startup of your application. When a job is executed with the `BatchContextFilter` hangfire filter active, a new Guid will be created for an `Id` batch parameter and the current Utc date will be retrieved for the `Started` batch parameter. These values are then stored against the context of the job along with any other custom batch parameters added during job execution.
 
-For any nested jobs that are queued during the execution of this initial job, the `Id` and `Started` parameters can be accessed by using the [BackgroundJobContext](#backgroundjobcontext):
+For any nested jobs that are queued during the execution of this initial job, batch parameters can be accessed by using the [BackgroundJobContext](#backgroundjobcontext):
 
 ```csharp
 public class MyRecurringJobType
