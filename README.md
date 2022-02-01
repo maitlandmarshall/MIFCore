@@ -11,15 +11,14 @@ MIFCore is a framework that leverages the job scheduling power of Hangfire and t
 * [Supported Platforms](#supported-platforms)  
 * [Integration Host](#integration-host)
   * [CreateDefaultBuilder](#createdefaultbuilder)  
-  * [Using AspNetCore](#using-aspnetcore)
-  * [Using AppInsights](#using-appinsights)
+   * [Using AspNetCore](#using-aspnetcore)
+   * [Using AppInsights](#using-appinsights)
   * [Application Startup](#application-startup)
-* [Configuration](#configuration)
-  * [Global Default Configuration](#global-default-configuration)
-  * [Bindings](#bindings)
-  * [Overriding Recurring Job Schedules](#overriding-recurring-job-schedules)
+* [Global Default Configuration](#global-default-configuration)
+* [Binding Configuration](#binding-configuration)  
 * [Job Actions](#job-actions)
 * [RecurringJobFactory](#recurring-job-factory)
+  * [Overriding Recurring Job Schedules](#overriding-recurring-job-schedules)
 * [Batch Context Filter](#batch-context-filter)
 * [Reschedule Job By Date Filter](#reschedule-job-by-date-filter) 
 * [BackgroundJobContext](#backgroundjobcontext) 
@@ -49,7 +48,7 @@ IntegrationHost.CreateDefaultBuilder(args)
 }
 ```
 
-By default, the `IntegrationHost.CreateDefaultBuilder()` method will add Hangfire and attempt to create the SQL database configured in the `ConnectionString` property of the `settings.json` file if it does not exist. MIFCore will then initialise the necessary Hangfire JobStorage using GeXiaoguo's [MAMQSqlServerStorage](https://github.com/GeXiaoguo/Hangfire.MAMQSqlExtension) extension. The Hangfire database tables will be created with the schema name "job".
+By default, the `IntegrationHost.CreateDefaultBuilder()` method will add Hangfire and if it does not exist, attempt to create the SQL database configured in the `ConnectionString` property of the `settings.json` file. MIFCore will then initialise the necessary Hangfire JobStorage using GeXiaoguo's [MAMQSqlServerStorage](https://github.com/GeXiaoguo/Hangfire.MAMQSqlExtension) extension. The Hangfire database tables will be created with the schema name "job".
 
 The CreateDefaultBuilder method will register the following filters to the global Hangfire configuration:
 
@@ -64,7 +63,7 @@ Additionally, the following methods from the [Microsoft.Extensions.Hosting](http
 * [ConfigureHostConfiguration(Action\<IConfigurationBuilder\>)](https://docs.microsoft.com/en-us/dotnet/api/microsoft.extensions.hosting.ihostbuilder.configurehostconfiguration?view=dotnet-plat-ext-6.0#microsoft-extensions-hosting-ihostbuilder-configurehostconfiguration(system-action((microsoft-extensions-configuration-iconfigurationbuilder))))
 * [ConfigureAppConfiguration(Action\<HostBuilderContext, IConfigurationBuilder\>)](https://docs.microsoft.com/en-us/dotnet/api/microsoft.extensions.hosting.hostbuilder.configureappconfiguration?view=dotnet-plat-ext-6.0#microsoft-extensions-hosting-hostbuilder-configureappconfiguration(system-action((microsoft-extensions-hosting-hostbuildercontext-microsoft-extensions-configuration-iconfigurationbuilder))))
 
-#### Using AspNetCore
+##### Using AspNetCore
 
 ```csharp
 IntegrationHost.CreateDefaultBuilder(args)
@@ -75,7 +74,7 @@ IntegrationHost.CreateDefaultBuilder(args)
 
 Adding the .UseAspNetCore method to your application will enable the [Hangfire Dashboard](https://docs.hangfire.io/en/latest/configuration/using-dashboard.html), allowing you to easily view the status of your jobs and perform other job tasks like triggering, rescheduling or cancelling. The dashboard can be accesssed by browsing to `http://localhost:{BindingPort}/hangfire`.
 
-The `.UseAspNetCore()` method will also instantiate a web server that can be used to mount custom controllers for your application:
+The `.UseAspNetCore()` method will also instantiate a kestrel web server that can be used to mount custom controllers for your application:
 
 ```csharp
 [Route("HelloWorld")]
@@ -90,7 +89,9 @@ public class HelloWorldController : Controller
 
 ![alt text](https://github.com/maitlandmarshall/MIFCore/blob/master/helloworld.jpg?raw=true)
 
-#### Using AppInsights
+If the `BindingPort` property in the `settings.json` file is 80 or 443, a HTTP.sys webserver will be used instead of a kestrel web server. This configuration also requires a binding path value to be configured on the `BindingPath` property in the `settings.json`;
+
+##### Using AppInsights
 
 MIFCore will link to your Microsoft Azure AppInsights service and automatically start tracking your jobs. To configure this functionality in your application, add the following code:
 
@@ -166,17 +167,51 @@ public void PostConfigure(MyDbContext myDbContext, MyConfig myConfig, IRecurring
 }
 ```
 
-### Configuration
+### Global Default Configuration
 
-#### Global Default Configuration
+MIFCore relies on a `settings.json` configuration file being present in the base directory of the application. The first time the application is run, MIFCore will create a `settings.json` file with some default properties if no file is found. The default configuration properties created on launch are:
 
-#### Bindings
+* ConnectionString
+* BindingPort
+* InstrumentationKey
 
-#### Overriding Recurring Job Schedules
+The `ConnectionString` and `InstrumentationKey` will be created as blank strings and the `BindingPort` will be set to 1337 by default.
+
+Whilst your application is under development and you wish to have configuration that is stored on your local machine, a `settings.default.json` file can be created in your project that stores any configuration necessary. This file will require you to add the `ConnectionString` and `InstrumentationKey` properties manually, the `BindingPort` in the application will default to 1337.
+
+
+### Binding Configuration
+
+The binding configuration within the application is used primarily in the `IntegrationHostBuilder.UseAspNetCore()` extension method. When MIFCore launches the Kestrel/HTTP.sys webserver, the `BindingPort` and `BindingPath` will be used to configure the Url. If the `BindingPath` has a value, then the `IApplicationBuilder` will add this value to the base path:
+
+```
+{
+    "BindingPath: "MyBindingPath"
+}
+```
+
+![alt text](https://github.com/maitlandmarshall/MIFCore/blob/master/bindingpath.jpg?raw=true)
 
 ### Job Actions
 
 ### Recurring Job Factory
+
+The `IRecurringJobFactory` class should be used when registering your recurring jobs in MIFCore. When a new job is registered, the `IRecurringJobFactory` will check for any CRON overrides specifies in the `settings.json`, create or update your job in Hangfire and immediately trigger the job if it has not been run previously.
+
+```csharp
+recurringJobFactory.CreateRecurringJob<MyRecurringJob>("MyJobName", y => y.RunMyJob(), Cron.Daily());
+```
+
+#### Overriding Recurring Job Schedules
+
+The CRON schedule for a job can be overriden in the `settings.json` file by adding a property with the job name as the key and the CRON string as the value:
+
+```
+{
+    "MyJobName": "0 */3 * * *"
+}
+```
+If an override is added while the application is running, restart the application for the changes to take effect.
 
 ### Batch Context Filter
 
@@ -192,9 +227,7 @@ throw new RescheduleJobException(rescheduleDate);
 
 ### BackgroundJobContext
 
-The BackgroundJobContext filter is a global [IServerFilter](https://docs.hangfire.io/en/latest/extensibility/using-job-filters.html) that retrieves and stores the current PerformContext of a job each time it is executed. The PerformContext allows you to access the Hangfire Job Storage, BackgroundJob object and perform a number of other tasks.
-
-E.g. adding/retrieving parameters during execution of a job:
+The BackgroundJobContext filter is a global [IServerFilter](https://docs.hangfire.io/en/latest/extensibility/using-job-filters.html) that retrieves and stores the current PerformContext of a job each time it is executed. The PerformContext allows you to access the Hangfire Job Storage, BackgroundJob object and perform a number of other tasks e.g. adding/retrieving parameters during execution of a job:
 
 ```csharp 
 public void MyRecurringJobMethod()
@@ -235,7 +268,7 @@ public void MyRecurringJobMethod()
 
 ### Track Last Success Attribute
 
-Each time a job with the `TrackLastSuccess` attribute is successfully executed, the current date time will be stored as a parameter on the job. To access the last successful run date, use the `BackgroundJob.GetLastSuccess()` method in the `BackgroundJobContext` to retrieve the "LastSuccess" value.
+Each time a job with the `TrackLastSuccess` attribute is successfully executed, the current date time will be stored as a parameter on the job. To access the last successful run date, use the `BackgroundJob.GetLastSuccess()` extension method in the `BackgroundJobContext` to retrieve the "LastSuccess" value.
 
 ```csharp
 [TrackLastSuccess]
