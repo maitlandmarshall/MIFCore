@@ -89,7 +89,7 @@ public class HelloWorldController : Controller
 
 ![alt text](https://github.com/maitlandmarshall/MIFCore/blob/master/helloworld.jpg?raw=true)
 
-If the `BindingPort` property in the `settings.json` file is 80 or 443, a HTTP.sys webserver will be used instead of a kestrel web server. This configuration also requires a binding path value to be configured on the `BindingPath` property in the `settings.json`;
+If the `BindingPort` property in the `settings.json` file is 80 or 443, a HTTP.sys webserver will be used instead of a Kestrel web server.
 
 ##### Using AppInsights
 
@@ -102,7 +102,7 @@ IntegrationHost.CreateDefaultBuilder(args)
 }
 ```
 
-MIFCore will attempt to retrieve the configured `InstrumentationKey` property from the `settings.json` file and instantiate a [Microsoft.ApplicationInsights.TelemetryClient](https://docs.microsoft.com/en-us/dotnet/api/microsoft.applicationinsights.telemetryclient?view=azure-dotnet) for use with an [IServerFilter](https://docs.hangfire.io/en/latest/extensibility/using-job-filters.html). This filter will track an event or exception in the telemetry client each time a job is executed and will provide the following information:
+MIFCore will attempt to retrieve the configured `InstrumentationKey` property from the `settings.json` file and instantiate a [Microsoft.ApplicationInsights.TelemetryClient](https://docs.microsoft.com/en-us/dotnet/api/microsoft.applicationinsights.telemetryclient?view=azure-dotnet) that operates alongside a global  [IServerFilter](https://docs.hangfire.io/en/latest/extensibility/using-job-filters.html). This filter will track an event or exception in the telemetry client each time a job is executed and will provide the following information:
 
 * Event Name/Description
 * Application name
@@ -144,7 +144,7 @@ public void ConfigureServices(IServiceCollection services)
 }
 ```
 
-For information regarding `services.AddIntegrationSetting<MyConfig>();` see [Configuration](#configuration).
+For information regarding `services.AddIntegrationSetting<MyConfig>();` see [Global Default Configuration](#global-default-configuration).
 
 The `Configure` method is executed after the `IHost` has been built and the dependencies registered in the `ConfigureServices` method have been initialised. This method is useful for performing any other functionality required before the application `IHost.Run()` method is called e.g. registering custom global Hangfire configuration:
 
@@ -175,10 +175,40 @@ MIFCore relies on a `settings.json` configuration file being present in the base
 * BindingPort
 * InstrumentationKey
 
-The `ConnectionString` and `InstrumentationKey` will be created as blank strings and the `BindingPort` will be set to 1337 by default.
+These configuration items are automatically added to the `Globals.DefaultConfiguration`. The `ConnectionString` and `InstrumentationKey` will be created as blank strings and the `BindingPort` will be set to 1337 by default.
 
-Whilst your application is under development and you wish to have configuration that is stored on your local machine, a `settings.default.json` file can be created in your project that stores any configuration necessary. This file will require you to add the `ConnectionString` and `InstrumentationKey` properties manually, the `BindingPort` in the application will default to 1337.
+Whilst your application is under development and you wish to have configuration that is stored on your local machine, a `settings.default.json` file can be created in your project that stores any required configuration. You must add the `ConnectionString` and `InstrumentationKey` properties to this file manually, the `BindingPort` in the application will default to 1337.
 
+You have the option of adding your own custom configuration by creating a class with the required properties and then registering it using the `IServiceCollection.AddIntegrationSettings()` extension method:
+
+```csharp
+// settings.json
+{
+    "ConnectionString": "",
+    "BindingPort": 1337,
+    "BindingPath": "",
+    "InstrumentationKey": "",
+    "MyConfigProperty": true
+}
+
+// Custom configuration class
+public class MyConfig
+{
+    public bool MyConfigProperty {get; set;}
+}
+
+// Startup.cs 
+public void ConfigureServices(IServiceCollection services)
+{
+    services.AddIntegrationSettings<MyConfig>();
+}
+```
+
+The `.AddIntegrationSettings()` method will add your custom configuration plus the other default configuration properties into a single IConfiguration object that can be accessed globally using `Globals.DefaultConfiguration`:
+
+```csharp
+var myConfigItem = Globals.DefaultConfiguration["MyConfigProperty"];
+```
 
 ### Binding Configuration
 
