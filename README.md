@@ -215,6 +215,45 @@ If an override is added while the application is running, restart the applicatio
 
 ### Batch Context Filter
 
+The `BatchContextFilter` is a global [IClientFilter](https://docs.hangfire.io/en/latest/extensibility/using-job-filters.html)/[IServerFilter](https://docs.hangfire.io/en/latest/extensibility/using-job-filters.html) that allows you to easily identify group a of jobs using an `Id` and a `Started` job parameter. When a job is executed with the `BatchContextFilter` hangfire filter active, a new Guid will be created for the `Id` parameter and the current Utc date will be retrieved for the `Started` parameter. These values are then stored against the context of the job.
+
+For any nested jobs that are queued during the execution of this initial job, the `Id` and `Started` parameters can be accessed by using the [BackgroundJobContext](#backgroundjobcontext):
+
+```csharp
+public class MyRecurringJobType
+{
+    private readonly IBackgroundJobClient backgroundJobClient;
+
+    public MyRecurringJobType(IBackgroundJobClient backgroundJobClient)
+    {
+        this.backgroundJobClient = backgroundJobClient;
+    }
+
+    public void RootJob(IBackgroundJobClient backgroundJobClient)
+    {
+        BackgroundJobContext.Current.SetBatchParameter("MyRootBatchParameter", "MyValue");
+
+        this.backgroundJobClient.Enqueue<MyRecurringJobType>(y => y.NestedJob1());
+    }
+
+    public void NestedJob1()
+    {
+        var batchId = BackgroundJobContext.Current.GetBatchParameter<Guid>("Id");
+        var started = BackgroundJobContext.Current.GetBatchParameter<DateTime>("Started");
+        var myValue = BackgroundJobContext.Current.SetBatchParameter<string>("MyRootBatchParameter");
+
+        this.backgroundJobClient.Enqueue<MyRecurringJobType>(y => y.NestedJob2());
+    }
+
+    public void NestedJob2()
+    {
+            var batchId = BackgroundJobContext.Current.GetBatchParameter<Guid>("Id");
+        var started = BackgroundJobContext.Current.GetBatchParameter<DateTime>("Started");
+        var myValue = BackgroundJobContext.Current.SetBatchParameter<string>("MyRootBatchParameter");
+    }
+}
+```
+
 ### Reschedule Job By Date Filter
 
 The `RescheduleJobByDateFilter` is an [IElectStateFilter](https://docs.hangfire.io/en/latest/extensibility/using-job-filters.html) that provides the ability for you to reschedule a job for a specified date without incrementing the RetryCount for the job. In order to trigger this filter, a `RescheduleJobException` must be thrown during execution of the job. The `RescheduleJobException` has a `rescheduleDate` parameter that allows you to specify the date that the job should be retried.
