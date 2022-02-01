@@ -72,9 +72,9 @@ IntegrationHost.CreateDefaultBuilder(args)
 }
 ```
 
-Adding the .UseAspNetCore method to your application will enable the [Hangfire Dashboard](https://docs.hangfire.io/en/latest/configuration/using-dashboard.html), allowing you to easily view the status of your jobs and perform other job tasks like triggering, rescheduling or cancelling. The dashboard can be accesssed by browsing to `http://localhost:{BindingPort}/hangfire`.
+Adding the .UseAspNetCore method to your application will enable the [Hangfire Dashboard](https://docs.hangfire.io/en/latest/configuration/using-dashboard.html), allowing you to easily view the status of your jobs and perform other job tasks like triggering, rescheduling or cancelling. The dashboard can be accesssed by browsing to `http://localhost:{BindingPort}/{BindingPath}/hangfire`.
 
-The `.UseAspNetCore()` method will also instantiate a kestrel web server that can be used to mount custom controllers for your application:
+The `.UseAspNetCore()` method will also instantiate a Kestrel web server that can be used to mount custom controllers for your application:
 
 ```csharp
 [Route("HelloWorld")]
@@ -89,11 +89,11 @@ public class HelloWorldController : Controller
 
 ![alt text](https://github.com/maitlandmarshall/MIFCore/blob/master/helloworld.jpg?raw=true)
 
-If the `BindingPort` property in the `settings.json` file is 80 or 443, a HTTP.sys webserver will be used instead of a Kestrel web server.
+If the `BindingPort` property in the `settings.json` file is 80 or 443, a HTTP.sys webserver will be used instead of a Kestrel web server. The advantage to setting your `BindingPort` to 80 is that the HTTP.sys web server allows multiple services to share the same port as long as each service has a different `BindingPath`.
 
 ##### Using AppInsights
 
-MIFCore will link to your Microsoft Azure AppInsights service and automatically start tracking your jobs. To configure this functionality in your application, add the following code:
+MIFCore will link to your Microsoft Azure AppInsights resource and automatically start tracking your jobs. To configure this functionality in your application, add the following code:
 
 ```csharp
 IntegrationHost.CreateDefaultBuilder(args)
@@ -102,7 +102,7 @@ IntegrationHost.CreateDefaultBuilder(args)
 }
 ```
 
-MIFCore will attempt to retrieve the configured `InstrumentationKey` property from the `settings.json` file and instantiate a [Microsoft.ApplicationInsights.TelemetryClient](https://docs.microsoft.com/en-us/dotnet/api/microsoft.applicationinsights.telemetryclient?view=azure-dotnet) that operates alongside a global  [IServerFilter](https://docs.hangfire.io/en/latest/extensibility/using-job-filters.html). This filter will track an event or exception in the telemetry client each time a job is executed and will provide the following information:
+MIFCore will attempt to retrieve the configured `InstrumentationKey` property from the `settings.json` file and instantiate a [Microsoft.ApplicationInsights.TelemetryClient](https://docs.microsoft.com/en-us/dotnet/api/microsoft.applicationinsights.telemetryclient?view=azure-dotnet) that operates alongside a global [IServerFilter](https://docs.hangfire.io/en/latest/extensibility/using-job-filters.html). This filter will track an event or exception in the telemetry client each time a job is executed and will provide the following information:
 
 * Event Name/Description
 * Application name
@@ -177,7 +177,7 @@ MIFCore relies on a `settings.json` configuration file being present in the base
 
 These configuration items are automatically added to the `Globals.DefaultConfiguration`. The `ConnectionString` and `InstrumentationKey` will be created as blank strings and the `BindingPort` will be set to 1337 by default.
 
-Whilst your application is under development and you wish to have configuration that is stored on your local machine, a `settings.default.json` file can be created in your project that stores any required configuration. You must add the `ConnectionString` and `InstrumentationKey` properties to this file manually, the `BindingPort` in the application will default to 1337.
+Whilst your application is under development and you wish to have configuration that is stored on your local machine, a `settings.default.json` file can be created in your project that stores any required configuration. You must add the `ConnectionString` and `InstrumentationKey` properties to this file manually, the `BindingPort` in the application will default to 1337. If no `BindingPort` can be found in the `settings.json` file, the system will automatically bind to port 666.
 
 You have the option of adding your own custom configuration by creating a class with the required properties and then registering it using the `IServiceCollection.AddIntegrationSettings()` extension method:
 
@@ -242,7 +242,9 @@ The `job.JobActions` table consists of the following columns:
 * `Order` The sequence number for this action.
 * `Timing` Must be set to `BEFORE` or `AFTER`. Specifies whether action should be run before or after the job.
 * `IsEnabled` Specifies whether this action is enabled.
-* `Database` Specifies which sql database this action should be run against.
+* `Database` Specifies which sql database this action should be run against. 
+
+If the `Database` column is left as a null value, MIFCore will use the current database configured in the `ConnectionString` property of the `settings.json` file.
 
 To create some Job Actions, register your required recurring jobs in the application startup class:
 
@@ -262,11 +264,31 @@ VALUES ('MyJob', 'EXECUTE [dbo].[MyStoredProc]', 1, 'BEFORE', 1, 'MyOtherDatabas
 GO
 
 INSERT [job].[JobActions] ([JobName],[Action],[Order],[Timing],[IsEnabled])
-VALUES ('MyJob', 'recurring-job:MyOtherJob', 2, 'AFTER', 1)
+VALUES ('MyJob', 'recurring-job:MyRecurringJob', 1, 'AFTER', 1)
 GO
 ```
 
-In the section above, the first action will execute a sql command of `EXECUTE [dbo].[MyStoredProc]` against the 'MyOtherDatabase' database before the recurring job 'MyJob' has been executed. Then, a second action will be run to trigger the 'MyOtherJob' recurring job after the original job 'MyJob' has been executed.
+In the example above, the first action will execute a sql command of `EXECUTE [dbo].[MyStoredProc]` against the 'MyOtherDatabase' database before the recurring job 'MyJob' has been executed. Then, a second action will be run to trigger the 'MyRecurringJob' recurring job after the original job 'MyJob' has been executed.
+
+The `Order` value should only be incremented for job actions that have the same `Timing` value:
+
+```sql
+INSERT [job].[JobActions] ([JobName],[Action],[Order],[Timing],[IsEnabled],[Database])
+VALUES ('MyJob', 'EXECUTE [dbo].[MyStoredProc]', 1, 'BEFORE', 1, 'MyOtherDatabase')
+GO
+
+INSERT [job].[JobActions] ([JobName],[Action],[Order],[Timing],[IsEnabled],[Database])
+VALUES ('MyJob', 'EXECUTE [dbo].[MyOtherStoredProc]', 2, 'BEFORE', 1, 'MyOtherDatabase')
+GO
+
+INSERT [job].[JobActions] ([JobName],[Action],[Order],[Timing],[IsEnabled])
+VALUES ('MyJob', 'recurring-job:MyRecurringJob', 1, 'AFTER', 1)
+GO
+
+INSERT [job].[JobActions] ([JobName],[Action],[Order],[Timing],[IsEnabled])
+VALUES ('MyJob', 'recurring-job:MyOtherRecurringJob', 2, 'AFTER', 1)
+GO
+```
 
 The `recurring-job:` prefix is required on the action in order to execute an existing recurring job. The format of the action should be `recurring-job:{RecurringJobName}`. By default, Job Actions will be executed against the database configured in the `ConnectionString` property of the `settings.json` file.
 
@@ -297,7 +319,7 @@ If an override is added while the application is running, restart the applicatio
 
 ### Batch Context Filter
 
-The `BatchContextFilter` is a global [IClientFilter](https://docs.hangfire.io/en/latest/extensibility/using-job-filters.html)/[IServerFilter](https://docs.hangfire.io/en/latest/extensibility/using-job-filters.html) that can be added during the startup of your application. When a job is executed with the `BatchContextFilter` hangfire filter active, a new Guid will be created for an `Id` batch parameter and the current Utc date will be retrieved for the `Started` batch parameter. These values are then stored against the context of the job along with any other custom batch parameters added during job execution.
+The `BatchContextFilter` is a global [IClientFilter](https://docs.hangfire.io/en/latest/extensibility/using-job-filters.html)/[IServerFilter](https://docs.hangfire.io/en/latest/extensibility/using-job-filters.html) that can be added during the startup of your application. When a job is executed with the `BatchContextFilter` hangfire filter active, a new Guid will be stored in an `Id` batch parameter and the current Utc date will be stored in a `Started` batch parameter against the context of the job. You can also add custom batch parameters during execution of the job using the `SetBatchParameter` method in the `BackgroundJobContext`.
 
 For any nested jobs that are queued during the execution of this initial job, batch parameters can be accessed by using the [BackgroundJobContext](#backgroundjobcontext):
 
@@ -313,7 +335,7 @@ public class MyRecurringJobType
 
     public void RootJob(IBackgroundJobClient backgroundJobClient)
     {
-        BackgroundJobContext.Current.SetBatchParameter("MyRootBatchParameter", "MyValue");
+        BackgroundJobContext.Current.SetBatchParameter("MyCustomBatchParameter", "ParameterValue");
 
         this.backgroundJobClient.Enqueue<MyRecurringJobType>(y => y.NestedJob1());
     }
@@ -322,7 +344,7 @@ public class MyRecurringJobType
     {
         var batchId = BackgroundJobContext.Current.GetBatchParameter<Guid>("Id");
         var started = BackgroundJobContext.Current.GetBatchParameter<DateTime>("Started");
-        var myValue = BackgroundJobContext.Current.SetBatchParameter<string>("MyRootBatchParameter");
+        var myValue = BackgroundJobContext.Current.GetBatchParameter<string>("MyCustomBatchParameter");
 
         this.backgroundJobClient.Enqueue<MyRecurringJobType>(y => y.NestedJob2());
     }
@@ -331,7 +353,7 @@ public class MyRecurringJobType
     {
         var batchId = BackgroundJobContext.Current.GetBatchParameter<Guid>("Id");
         var started = BackgroundJobContext.Current.GetBatchParameter<DateTime>("Started");
-        var myValue = BackgroundJobContext.Current.SetBatchParameter<string>("MyRootBatchParameter");
+        var myValue = BackgroundJobContext.Current.GetBatchParameter<string>("MyCustomBatchParameter");
     }
 }
 ```
@@ -370,7 +392,7 @@ The attribute works by creating a SHA384 hash or "fingerprint" and storing it in
 
 When the [IClientFilter.OnCreating(CreatingContext filterContext)](https://docs.hangfire.io/en/latest/extensibility/using-job-filters.html) method is invoked, MIFCore will attempt to add a fingerprint to the connnection and will cancel the job if an existing fingerprint is found.
 
-The `FingerprintTimeoutMinutes` parameter is required as this will determine how long execution of the job is locked for. 
+If populated, the optional `FingerprintTimeoutMinutes` parameter will determine how long execution of the job is locked for. 
 
 ```csharp
 [DisableIdenticalQueuedItems(FingerprintTimeoutMinutes = 10)]
