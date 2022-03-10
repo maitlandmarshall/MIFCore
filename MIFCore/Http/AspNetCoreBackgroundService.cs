@@ -36,7 +36,9 @@ namespace MIFCore.Http
                     this.startupHandler.ConfigureServices(svc);
                 });
 
-                if (this.aspNetCoreConfig.BindingPort == 80 || this.aspNetCoreConfig.BindingPort == 443)
+                var webServer = this.GetWebServer();
+
+                if (webServer == WebServer.HttpSys)
                 {
                     webHost.UseHttpSys(options =>
                     {
@@ -55,6 +57,23 @@ namespace MIFCore.Http
             await hostBuilder.Build().RunAsync(stoppingToken);
         }
 
+        private WebServer GetWebServer()
+        {
+            // If the user has specified a server, use that value
+            if (this.aspNetCoreConfig.BindingServer.HasValue)
+                return this.aspNetCoreConfig.BindingServer.Value;
+
+            // Otherwise by default, on ports 80 / 443, use HttpSys so the ports can be shared
+            if (this.aspNetCoreConfig.BindingPort == 80 
+                || this.aspNetCoreConfig.BindingPort == 443)
+            {
+                return WebServer.HttpSys;
+            }
+            else
+            {
+                return WebServer.Kestrel;
+            }
+        }
 
         private void Configure(IApplicationBuilder app)
         {

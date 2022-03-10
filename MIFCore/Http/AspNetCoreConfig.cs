@@ -9,5 +9,6 @@ namespace MIFCore.Http
     {
         public int BindingPort { get; set; } = 1337;
         public string BindingPath { get; set; }
+        public WebServer? BindingServer { get; set; }
     }
 }

@@ -1,5 +1,7 @@
 {
   "connectionString": "",
-  "bindingPort": 1337,
+  "bindingPort": 80,
+  "bindingPath": "abc",
   "instrumentationKey": ""
+
 }
