@@ -296,7 +296,7 @@ The `recurring-job:` prefix is required on the action in order to execute an exi
 
 NOTE: `IRecurringJobFactory & RecurringJobFactory are now obsolete in MIFCore.Hangfire v1.1.0`
 
-The `Hangfire.IRecurringJobManager` interface should be used when registering your recurring jobs in MIFCore. When a new job is registered, the `IRecurringJobManager` will check for any CRON overrides specifies in the `settings.json` and create or update your job in Hangfire.
+The `Hangfire.IRecurringJobManager` interface should be used when registering your recurring jobs in MIFCore. When a new job is registered, the `IRecurringJobManager` will check for any CRON overrides specified in the `settings.json` and create or update your job in Hangfire.
 
 ```csharp
 recurringJobManager.CreateRecurringJob<MyRecurringJob>("MyJobName", y => y.RunMyJob(), Cron.Daily());
