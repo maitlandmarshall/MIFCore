@@ -12,14 +12,15 @@ namespace MIFCore.Hangfire
         public static IServiceCollection AddHangfire(this IServiceCollection serviceDescriptors, Action<IGlobalConfiguration, HangfireConfig> configureDelegate = null)
         {
             serviceDescriptors.AddHostedService<HangfireBackgroundService>();
-            serviceDescriptors.AddTransient<IRecurringJobFactory, RecurringJobFactory>();
+            serviceDescriptors.AddTransient<IRecurringJobManager, MIFCoreRecurringJobManager>();
 
             var hangfireConfig = new HangfireConfig();
             Globals.DefaultConfiguration.Bind(hangfireConfig);
             serviceDescriptors.AddSingleton(hangfireConfig);
 
-            serviceDescriptors.AddHangfire(configuration: cfg => configureDelegate?.Invoke(cfg, hangfireConfig));
+            serviceDescriptors.AddHangfire(configuration: cfg => configureDelegate?.Invoke(cfg, hangfireConfig));            
             serviceDescriptors.AddTransient<JobStorageFactory>();
+            serviceDescriptors.AddTransient<IRecurringJobManager, MIFCoreRecurringJobManager>();
 
             return serviceDescriptors;
         }
