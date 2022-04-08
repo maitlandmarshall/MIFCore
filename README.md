@@ -159,11 +159,11 @@ public void Configure(IGlobalConfiguration hangfireGlobalConfig, MyConfig myConf
 The `PostConfigure` method is executed after the above methods have finished and the `IHost.Run()` method has been called. This method can be used for running any other startup functionality required e.g. running migrations for your DbContext, registering your recurring Hangfire jobs or executing a job immediately:
 
 ```csharp
-public void PostConfigure(MyDbContext myDbContext, MyConfig myConfig, IRecurringJobFactory recurringJobFactory)
+public void PostConfigure(MyDbContext myDbContext, MyConfig myConfig, IRecurringJobManager recurringJobManager)
 {
     myDbContext.Database.Migrate();
 
-    recurringJobFactory.CreateRecurringJob<MyRecurringJob>("MyJobName", y => y.RunMyJob(), Cron.Daily(), myConfig.MyQueueName);
+    recurringJobManager.CreateRecurringJob<MyRecurringJob>("MyJobName", y => y.RunMyJob(), Cron.Daily(), myConfig.MyQueueName);
 }
 ```
 
@@ -249,10 +249,10 @@ If the `Database` column is left as a null value, MIFCore will use the current d
 To create some Job Actions, register your required recurring jobs in the application startup class:
 
 ```csharp
-public void PostConfigure(IRecurringJobFactory recurringJobFactory)
+public void PostConfigure(IRecurringJobManager recurringJobManager)
 {
-    recurringJobFactory.CreateRecurringJob<MyRecurringJob>("MyJob", y => y.RunMyJob(), Cron.Daily());
-    recurringJobFactory.CreateRecurringJob<MyRecurringJob>("MyOtherJob", y => y.RunMyOtherJob(), Cron.Daily());
+    recurringJobManager.CreateRecurringJob<MyRecurringJob>("MyJob", y => y.RunMyJob(), Cron.Daily());
+    recurringJobManager.CreateRecurringJob<MyRecurringJob>("MyOtherJob", y => y.RunMyOtherJob(), Cron.Daily());
 }
 ```
 
@@ -292,18 +292,20 @@ GO
 
 The `recurring-job:` prefix is required on the action in order to execute an existing recurring job. The format of the action should be `recurring-job:{RecurringJobName}`. By default, Job Actions will be executed against the database configured in the `ConnectionString` property of the `settings.json` file.
 
-### Recurring Job Factory
+### Recurring Jobs
 
-The `IRecurringJobFactory` class should be used when registering your recurring jobs in MIFCore. When a new job is registered, the `IRecurringJobFactory` will check for any CRON overrides specifies in the `settings.json` and create or update your job in Hangfire.
+NOTE: `IRecurringJobFactory & RecurringJobFactory are now obsolete in MIFCore.Hangfire v1.1.0`
+
+The `Hangfire.IRecurringJobManager` interface should be used when registering your recurring jobs in MIFCore. When a new job is registered, the `IRecurringJobManager` will check for any CRON overrides specified in the `settings.json` and create or update your job in Hangfire.
 
 ```csharp
-recurringJobFactory.CreateRecurringJob<MyRecurringJob>("MyJobName", y => y.RunMyJob(), Cron.Daily());
+recurringJobManager.CreateRecurringJob<MyRecurringJob>("MyJobName", y => y.RunMyJob(), Cron.Daily());
 ```
 
 Set the `triggerIfNeverExecuted` parameter to true if you need Hangfire to trigger the job if it has not been run previously:
 
 ```csharp
-recurringJobFactory.CreateRecurringJob<MyRecurringJob>("MyJobName", y => y.RunMyJob(), Cron.Daily(), triggerIfNeverExecuted: true);
+recurringJobManager.CreateRecurringJob<MyRecurringJob>("MyJobName", y => y.RunMyJob(), Cron.Daily(), triggerIfNeverExecuted: true);
 ```
 
 #### Overriding Recurring Job Schedules

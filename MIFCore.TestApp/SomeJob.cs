@@ -16,17 +16,21 @@ namespace MIFCore.TestApp
 
         [JobDisplayName("dogJob")]
         [DisableConcurrentExecution(1000)]
-        public void DoTheJob()
+        public Task DoTheJob()
         {
             var current = BackgroundJobContext.Current;
 
             Console.WriteLine("yees");
             this.backgroundJobClient.Enqueue<SomeJob>(y => y.DoTheNextJob());
+
+            return Task.CompletedTask;
         }
 
-        public void TriggeredJobAction()
+        public Task TriggeredJobAction()
         {
             Console.WriteLine("triggered job action");
+
+            return Task.CompletedTask;
         }
 
         public async Task DoTheNextJob()
