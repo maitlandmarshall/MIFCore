@@ -75,7 +75,7 @@ namespace MIFCore.Hangfire.APIETL
                 ParentId = extractArgs?.ParentApiDataId
             };
 
-            // TODO: Push apiData to a another service for any additional handling
+            await this.endpointExtractPipeline.OnHandleResponse(new HandleResponseArgs(endpoint, apiData));
 
             return apiData;
         }

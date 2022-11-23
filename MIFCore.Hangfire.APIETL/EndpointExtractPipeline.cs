@@ -8,13 +8,16 @@ namespace MIFCore.Hangfire.APIETL
     {
         private readonly IEnumerable<IPrepareRequest> prepareRequests;
         private readonly IEnumerable<IPrepareNextRequest> prepareNextRequests;
+        private readonly IEnumerable<IHandleResponse> handleResponses;
 
         public EndpointExtractPipeline(
             IEnumerable<IPrepareRequest> prepareRequests,
-            IEnumerable<IPrepareNextRequest> prepareNextRequests)
+            IEnumerable<IPrepareNextRequest> prepareNextRequests,
+            IEnumerable<IHandleResponse> handleResponses)
         {
             this.prepareRequests = prepareRequests;
             this.prepareNextRequests = prepareNextRequests;
+            this.handleResponses = handleResponses;
         }
 
         public async Task OnPrepareRequest(PrepareRequestArgs args)
@@ -48,6 +51,17 @@ namespace MIFCore.Hangfire.APIETL
             }
 
             return result;
+        }
+
+        public async Task OnHandleResponse(HandleResponseArgs args)
+        {
+            var relatedHandleResponses = this.handleResponses
+               .Where(y => y.RespondsToEndpointName(args.Endpoint.Name));
+
+            foreach (var handleResponse in relatedHandleResponses)
+            {
+                await handleResponse.OnHandleResponse(args);
+            }
         }
     }
 }
