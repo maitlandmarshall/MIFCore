@@ -1,7 +1,4 @@
 ﻿using Hangfire.States;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace MIFCore.Hangfire
 {
@@ -17,7 +14,7 @@ namespace MIFCore.Hangfire
             if (failedState.Exception is RescheduleJobException exception)
             {
                 context.SetJobParameter("RetryCount", 0);
-                context.CandidateState = new ScheduledState(exception.RescheduleDate)
+                context.CandidateState = new ScheduledState(exception.RescheduleDate.ToUniversalTime())
                 {
                     Reason = $"Job has been rescheduled for {exception.RescheduleDate.ToLocalTime():dd/MM/yyyy HH:mm:ss}"
                 };
