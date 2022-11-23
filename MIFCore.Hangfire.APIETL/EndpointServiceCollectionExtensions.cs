@@ -17,8 +17,8 @@ namespace MIFCore.Hangfire.APIETL
             var endpoints = assembly
                 .GetTypes()
                 .Where(y =>
-                    y.GetCustomAttribute<ApiEndpointNameAttribute>() != null
-                    || y.GetCustomAttribute<ApiEndpointSelectorAttribute>() != null);
+                    y.GetCustomAttributes<ApiEndpointNameAttribute>().Any()
+                    || y.GetCustomAttributes<ApiEndpointSelectorAttribute>().Any());
 
             return serviceDescriptors.AddEndpoints(endpoints);
         }
@@ -29,14 +29,15 @@ namespace MIFCore.Hangfire.APIETL
             serviceDescriptors.TryAddSingleton<ApiEndpointRegister>();
             serviceDescriptors.TryAddTransient<IApiEndpointAttributeFactory, ApiEndpointAttributeFactory>();
             serviceDescriptors.TryAddTransient<IEndpointExtractPipeline, EndpointExtractPipeline>();
+            serviceDescriptors.TryAddScoped<EndpointExtractJob>();
 
             foreach (var t in endpoints)
             {
-                var endpointNameAttribute = t.GetCustomAttribute<ApiEndpointNameAttribute>();
-                var endpointSelectorAttribute = t.GetCustomAttribute<ApiEndpointSelectorAttribute>();
+                var endpointNameAttributes = t.GetCustomAttributes<ApiEndpointNameAttribute>();
+                var endpointSelectorAttribute = t.GetCustomAttributes<ApiEndpointSelectorAttribute>();
 
-                if (endpointNameAttribute == null
-                    && endpointSelectorAttribute == null)
+                if (endpointNameAttributes.Any() == false
+                    && endpointSelectorAttribute.Any() == false)
                     throw new ArgumentException($"The type {t.FullName} does not have an {nameof(ApiEndpointNameAttribute)} or {nameof(ApiEndpointSelectorAttribute)} attribute.");
 
                 if (typeof(IDefineEndpoints).IsAssignableFrom(t))
@@ -48,9 +49,17 @@ namespace MIFCore.Hangfire.APIETL
                 if (typeof(IPrepareNextRequest).IsAssignableFrom(t))
                     serviceDescriptors.AddScoped(typeof(IPrepareNextRequest), t);
 
+                if (typeof(IHandleResponse).IsAssignableFrom(t))
+                    serviceDescriptors.AddScoped(typeof(IHandleResponse), t);
+
                 // Register the endpoint name attribute, so an ApiEndpoint is created from it
-                if (endpointNameAttribute != null)
-                    serviceDescriptors.AddSingleton(endpointNameAttribute);
+                if (endpointNameAttributes.Any())
+                {
+                    foreach (var en in endpointNameAttributes)
+                    {
+                        serviceDescriptors.AddSingleton(en);
+                    }
+                }
             }
 
             return serviceDescriptors;

@@ -47,7 +47,7 @@ namespace MIFCore.Hangfire.APIETL
                     continue;
 
                 // Merge it with the resulting dictionary
-                result = result.Intersect(data).ToDictionary(x => x.Key, x => x.Value);
+                result = result.Union(data).ToDictionary(x => x.Key, x => x.Value);
             }
 
             return result;

@@ -2,7 +2,7 @@
 
 namespace MIFCore.Hangfire.APIETL
 {
-    internal interface IHandleResponse : IApiEndpointService
+    public interface IHandleResponse : IApiEndpointService
     {
         Task OnHandleResponse(HandleResponseArgs args);
     }

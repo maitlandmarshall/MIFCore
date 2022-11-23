@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace MIFCore.Hangfire.APIETL
 {
-    internal interface IPrepareNextRequest : IApiEndpointService
+    public interface IPrepareNextRequest : IApiEndpointService
     {
         Task<IDictionary<string, object>> OnPrepareNextRequest(PrepareNextRequestArgs args);
     }

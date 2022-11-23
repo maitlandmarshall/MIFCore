@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Linq;
+using System.Reflection;
 using System.Text.RegularExpressions;
 
 namespace MIFCore.Hangfire.APIETL
@@ -8,18 +9,16 @@ namespace MIFCore.Hangfire.APIETL
         public static bool RespondsToEndpointName(this IApiEndpointService apiEndpointService, string endpointName)
         {
             var type = apiEndpointService.GetType();
-            var endpointNameAttribute = type.GetCustomAttribute<ApiEndpointNameAttribute>();
-            var endpointSelectorAttribute = type.GetCustomAttribute<ApiEndpointSelectorAttribute>();
+            var endpointNameAttributes = type.GetCustomAttributes<ApiEndpointNameAttribute>();
+            var endpointSelectorAttributes = type.GetCustomAttributes<ApiEndpointSelectorAttribute>();
 
-            if (endpointNameAttribute?.EndpointName == endpointName)
+            if (endpointNameAttributes.Any(y => y.EndpointName == endpointName))
             {
                 return true;
             }
-            else if (endpointSelectorAttribute != null)
+            else if (endpointSelectorAttributes.Any())
             {
-                var regex = new Regex(endpointSelectorAttribute.Regex);
-
-                return regex.IsMatch(endpointName);
+                return endpointSelectorAttributes.Any(y => Regex.IsMatch(endpointName, y.Regex));
             }
 
             return false;

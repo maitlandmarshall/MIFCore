@@ -8,7 +8,7 @@ namespace MIFCore.Hangfire.APIETL
         {
             this.Endpoint = endpoint;
             this.ApiData = apiData;
-            this.Data = data ?? new Dictionary<string, object>();
+            this.Data = data ?? throw new System.ArgumentNullException(nameof(data));
         }
 
         public ApiEndpoint Endpoint { get; }
