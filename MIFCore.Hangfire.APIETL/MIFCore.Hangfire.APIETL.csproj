@@ -1,0 +1,33 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>netstandard2.1</TargetFramework>
+		<Authors>Maitland Marshall</Authors>
+		<Company>MAIT DEV</Company>
+		<PackageProjectUrl>https://github.com/maitlandmarshall/MIFCore</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/maitlandmarshall/MIFCore</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+		<IsPackable>true</IsPackable>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageTags>Hangfire, Scheduling, Jobs, Simplified, API, ETL</PackageTags>
+		<Description>An add-on to MIFCore which allows users to define API endpoints to extract, transform and load.</Description>
+
+		<Major>1</Major>
+		<Minor>0</Minor>
+		<Build>0</Build>
+		<Revision>0</Revision>
+
+		<Version>$(Major).$(Minor).$(Build).$(Revision)</Version>
+		<AssemblyVersion>$(Major).$(Minor).$(Build)</AssemblyVersion>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
+	  <PackageReference Include="Microsoft.Extensions.Http" Version="7.0.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\MIFCore.Hangfire\MIFCore.Hangfire.csproj" />
+	</ItemGroup>
+
+</Project>
