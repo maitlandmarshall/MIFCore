@@ -2,7 +2,7 @@
 
 namespace MIFCore.Hangfire.APIETL
 {
-    public interface IDefineEndpoints
+    public interface IDefineEndpoints : IApiEndpointService
     {
         IAsyncEnumerable<ApiEndpoint> DefineEndpoints(string endpointName);
     }

@@ -12,15 +12,18 @@ namespace MIFCore.Hangfire.APIETL
         private readonly IHttpClientFactory httpClientFactory;
         private readonly ApiEndpointRegister apiEndpointRegister;
         private readonly IBackgroundJobClient backgroundJobClient;
+        private readonly IEndpointExtractPipeline endpointExtractPipeline;
 
         public EndpointExtractJob(
             IHttpClientFactory httpClientFactory,
             ApiEndpointRegister apiEndpointRegister,
-            IBackgroundJobClient backgroundJobClient)
+            IBackgroundJobClient backgroundJobClient,
+            IEndpointExtractPipeline endpointExtractPipeline)
         {
             this.httpClientFactory = httpClientFactory;
             this.apiEndpointRegister = apiEndpointRegister;
             this.backgroundJobClient = backgroundJobClient;
+            this.endpointExtractPipeline = endpointExtractPipeline;
         }
 
         [DisableIdenticalQueuedItems]
@@ -44,21 +47,17 @@ namespace MIFCore.Hangfire.APIETL
             }
 
             var httpClient = this.httpClientFactory.CreateClient(endpoint.HttpClientName);
-            var request = await CreateRequest(endpoint, extractArgs);
+            var request = await this.CreateRequest(endpoint, extractArgs);
             var apiData = await this.ExecuteRequest(endpoint, httpClient, request, extractArgs);
 
-            if (endpoint is IPrepareNextRequest prepareNextRequest)
-            {
-                // If OnPrepareNextRequest returns null or an empty dict, then we're done with this endpoint.
-                var nextRequestData = await prepareNextRequest.OnPrepareNextRequest(new PrepareNextRequestArgs(apiData: apiData, data: extractArgs?.RequestData));
+            var nextRequestData = await this.endpointExtractPipeline.OnPrepareNextRequest(new PrepareNextRequestArgs(endpoint: endpoint, apiData: apiData, data: extractArgs?.RequestData));
 
-                if (nextRequestData == default(IDictionary<string, object>)
-                    || nextRequestData.Keys.Any() == false)
-                    return;
+            // If OnPrepareNextRequest returns an empty dict, then we're done with this endpoint.
+            if (nextRequestData.Keys.Any() == false)
+                return;
 
-                // Otherwise we need to schedule another job to continue extracting this endpoint.
-                this.backgroundJobClient.Enqueue<EndpointExtractJob>(y => y.Extract(endpoint.Name, new ExtractArgs(nextRequestData, apiData.ParentId)));
-            }
+            // Otherwise we need to schedule another job to continue extracting this endpoint.
+            this.backgroundJobClient.Enqueue<EndpointExtractJob>(y => y.Extract(endpoint.Name, new ExtractArgs(nextRequestData, apiData.ParentId)));
         }
 
         private async Task<ApiData> ExecuteRequest(ApiEndpoint endpoint, HttpClient httpClient, HttpRequestMessage request, ExtractArgs extractArgs = null)
@@ -81,7 +80,7 @@ namespace MIFCore.Hangfire.APIETL
             return apiData;
         }
 
-        private static async Task<HttpRequestMessage> CreateRequest(ApiEndpoint endpoint, ExtractArgs extractArgs = null)
+        private async Task<HttpRequestMessage> CreateRequest(ApiEndpoint endpoint, ExtractArgs extractArgs = null)
         {
             // Create a new request, using endpoint.Name as the relative uri
             // i.e endpoint.Name = "getStuff" and httpClient.BaseAddress = "https://someapi/api/"
@@ -96,11 +95,8 @@ namespace MIFCore.Hangfire.APIETL
                 request.Headers.Add(h.Key, h.Value);
             }
 
-            if (endpoint is IPrepareRequest prepareRequest)
-            {
-                // OnPrepareRequest after this system has finished up with the request
-                await prepareRequest.OnPrepareRequest(new PrepareRequestArgs(request, extractArgs?.RequestData));
-            }
+            // OnPrepareRequest after this system has finished up with the request
+            await this.endpointExtractPipeline.OnPrepareRequest(new PrepareRequestArgs(endpoint, request, extractArgs?.RequestData));
 
             return request;
         }

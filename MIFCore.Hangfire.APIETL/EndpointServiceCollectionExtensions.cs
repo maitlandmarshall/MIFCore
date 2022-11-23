@@ -28,6 +28,7 @@ namespace MIFCore.Hangfire.APIETL
             // Register the services used to register jobs and create ApiEndpoint definitions
             serviceDescriptors.TryAddSingleton<ApiEndpointRegister>();
             serviceDescriptors.TryAddTransient<IApiEndpointAttributeFactory, ApiEndpointAttributeFactory>();
+            serviceDescriptors.TryAddTransient<IEndpointExtractPipeline, EndpointExtractPipeline>();
 
             foreach (var t in endpoints)
             {

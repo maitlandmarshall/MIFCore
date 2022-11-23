@@ -1,7 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using System.Text.RegularExpressions;
 
 namespace MIFCore.Hangfire.APIETL
 {
@@ -58,21 +56,8 @@ namespace MIFCore.Hangfire.APIETL
         {
             foreach (var ed in this.endpointDefiners)
             {
-                var edType = ed.GetType();
-                var endpointNameAttribute = edType.GetCustomAttribute<ApiEndpointNameAttribute>();
-                var endpointSelectorAttribute = edType.GetCustomAttribute<ApiEndpointSelectorAttribute>();
-
-                if (endpointNameAttribute?.EndpointName == endpointName)
-                {
+                if (ed.RespondsToEndpointName(endpointName))
                     yield return ed;
-                }
-                else if (endpointSelectorAttribute != null)
-                {
-                    var regex = new Regex(endpointSelectorAttribute.Regex);
-
-                    if (regex.IsMatch(endpointName))
-                        yield return ed;
-                }
             }
         }
     }

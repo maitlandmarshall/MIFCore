@@ -2,7 +2,7 @@
 
 namespace MIFCore.Hangfire.APIETL
 {
-    public interface IPrepareRequest
+    public interface IPrepareRequest : IApiEndpointService
     {
         Task OnPrepareRequest(PrepareRequestArgs args);
     }
