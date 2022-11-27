@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Net.Http;
 
-namespace MIFCore.Hangfire.APIETL
+namespace MIFCore.Hangfire.APIETL.Extract
 {
     public class PrepareRequestArgs
     {

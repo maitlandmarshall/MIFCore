@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace MIFCore.Hangfire.APIETL
+namespace MIFCore.Hangfire.APIETL.Extract
 {
     public static class EndpointServiceCollectionExtensions
     {

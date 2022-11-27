@@ -1,9 +1,7 @@
 ﻿using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
-[assembly: InternalsVisibleTo("MIFCore.Hangfire.APIETL.Tests")]
-namespace MIFCore.Hangfire.APIETL
+namespace MIFCore.Hangfire.APIETL.Extract
 {
     public class ApiEndpoint
     {

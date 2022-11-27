@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using MIFCore.Hangfire.APIETL.Extract;
 
 namespace MIFCore.Hangfire.APIETL.Tests
 {

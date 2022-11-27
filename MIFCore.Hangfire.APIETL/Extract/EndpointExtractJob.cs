@@ -5,7 +5,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 
-namespace MIFCore.Hangfire.APIETL
+namespace MIFCore.Hangfire.APIETL.Extract
 {
     internal class EndpointExtractJob
     {

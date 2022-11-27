@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-namespace MIFCore.Hangfire.APIETL
+namespace MIFCore.Hangfire.APIETL.Extract
 {
     internal class ApiEndpointAttributeFactory : IApiEndpointAttributeFactory
     {

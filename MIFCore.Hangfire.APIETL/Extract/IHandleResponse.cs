@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace MIFCore.Hangfire.APIETL
+namespace MIFCore.Hangfire.APIETL.Extract
 {
     public interface IHandleResponse : IApiEndpointService
     {

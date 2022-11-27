@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MIFCore.Hangfire.APIETL
+namespace MIFCore.Hangfire.APIETL.Extract
 {
     public class ApiData
     {
