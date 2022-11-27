@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace MIFCore.Hangfire.APIETL
 {
-    public class ApiEndpointRegister
+    public class ApiEndpointRegister : IApiEndpointRegister
     {
         private readonly IDictionary<string, ApiEndpoint> endpoints = new Dictionary<string, ApiEndpoint>();
         private readonly IRecurringJobManager recurringJobManager;

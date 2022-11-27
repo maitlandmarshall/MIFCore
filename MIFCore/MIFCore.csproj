@@ -32,8 +32,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\MIFCore.Common\MIFCore.Common.csproj" />
-	  <ProjectReference Include="..\MIFCore.Hangfire\MIFCore.Hangfire.csproj" />
+		<ProjectReference Include="..\MIFCore.Common\MIFCore.Common.csproj" />
+		<ProjectReference Include="..\MIFCore.Hangfire\MIFCore.Hangfire.csproj" />
 	</ItemGroup>
 
 </Project>
