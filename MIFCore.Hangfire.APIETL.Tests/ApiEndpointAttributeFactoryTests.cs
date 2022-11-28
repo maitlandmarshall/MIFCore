@@ -35,7 +35,7 @@ namespace MIFCore.Hangfire.APIETL.Tests
         private IServiceProvider GetServiceProvider(params Type[] endpoints)
         {
             var serviceCollection = new ServiceCollection();
-            serviceCollection.AddEndpoints(endpoints);
+            serviceCollection.AddApiEndpointsToExtract(endpoints);
             return serviceCollection.BuildServiceProvider();
         }
 

@@ -9,7 +9,7 @@ namespace MIFCore.Hangfire.APIETL.Extract
 {
     public static class EndpointServiceCollectionExtensions
     {
-        public static IServiceCollection AddEndpoints(this IServiceCollection serviceDescriptors, Assembly assembly = null)
+        public static IServiceCollection AddApiEndpointsToExtract(this IServiceCollection serviceDescriptors, Assembly assembly = null)
         {
             assembly ??= Assembly.GetCallingAssembly();
 
@@ -20,10 +20,10 @@ namespace MIFCore.Hangfire.APIETL.Extract
                     y.GetCustomAttributes<ApiEndpointNameAttribute>().Any()
                     || y.GetCustomAttributes<ApiEndpointSelectorAttribute>().Any());
 
-            return serviceDescriptors.AddEndpoints(endpoints);
+            return serviceDescriptors.AddApiEndpointsToExtract(endpoints);
         }
 
-        public static IServiceCollection AddEndpoints(this IServiceCollection serviceDescriptors, IEnumerable<Type> endpoints)
+        public static IServiceCollection AddApiEndpointsToExtract(this IServiceCollection serviceDescriptors, IEnumerable<Type> endpoints)
         {
             // Register the services used to register jobs and create ApiEndpoint definitions
             serviceDescriptors.TryAddSingleton<IApiEndpointRegister, ApiEndpointRegister>();
