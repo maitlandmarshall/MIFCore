@@ -15,10 +15,10 @@
 		<Major>1</Major>
 		<Minor>0</Minor>
 		<Build>0</Build>
-		<Revision>0</Revision>
+	</PropertyGroup>
 
-		<Version>$(Major).$(Minor).$(Build).$(Revision)</Version>
-		<AssemblyVersion>$(Major).$(Minor).$(Build)</AssemblyVersion>
+	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
+		<VersionSuffix>rev.$([System.DateTime]::UtcNow.ToString("MddHHmm"))</VersionSuffix>
 	</PropertyGroup>
 
 	<ItemGroup>
