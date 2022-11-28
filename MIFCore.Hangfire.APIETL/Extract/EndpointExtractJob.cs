@@ -10,13 +10,13 @@ namespace MIFCore.Hangfire.APIETL.Extract
     internal class EndpointExtractJob
     {
         private readonly IHttpClientFactory httpClientFactory;
-        private readonly ApiEndpointRegister apiEndpointRegister;
+        private readonly IApiEndpointRegister apiEndpointRegister;
         private readonly IBackgroundJobClient backgroundJobClient;
         private readonly IEndpointExtractPipeline endpointExtractPipeline;
 
         public EndpointExtractJob(
             IHttpClientFactory httpClientFactory,
-            ApiEndpointRegister apiEndpointRegister,
+            IApiEndpointRegister apiEndpointRegister,
             IBackgroundJobClient backgroundJobClient,
             IEndpointExtractPipeline endpointExtractPipeline)
         {

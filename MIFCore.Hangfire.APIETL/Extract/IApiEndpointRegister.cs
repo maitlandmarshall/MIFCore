@@ -9,6 +9,6 @@ namespace MIFCore.Hangfire.APIETL.Extract
 
         ApiEndpoint Get(string endpointName);
         Task Register();
-        ApiEndpointRegister Register(ApiEndpoint endpoint);
+        IApiEndpointRegister Register(ApiEndpoint endpoint);
     }
 }

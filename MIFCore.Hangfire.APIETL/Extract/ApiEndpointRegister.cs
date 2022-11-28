@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace MIFCore.Hangfire.APIETL.Extract
 {
-    public class ApiEndpointRegister : IApiEndpointRegister
+    internal class ApiEndpointRegister : IApiEndpointRegister
     {
         private readonly IDictionary<string, ApiEndpoint> endpoints = new Dictionary<string, ApiEndpoint>();
         private readonly IRecurringJobManager recurringJobManager;
@@ -19,7 +19,7 @@ namespace MIFCore.Hangfire.APIETL.Extract
 
         public IEnumerable<ApiEndpoint> Endpoints { get => this.endpoints.Values.ToArray(); }
 
-        public ApiEndpointRegister Register(ApiEndpoint endpoint)
+        public IApiEndpointRegister Register(ApiEndpoint endpoint)
         {
             this.endpoints.Add(endpoint.Name, endpoint);
 
