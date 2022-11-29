@@ -1,5 +1,4 @@
-﻿using MIFCore.Hangfire.APIETL.Transform;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -9,16 +8,13 @@ namespace MIFCore.Hangfire.APIETL.Extract
     {
         private readonly IEnumerable<IPrepareRequest> prepareRequests;
         private readonly IEnumerable<IPrepareNextRequest> prepareNextRequests;
-        private readonly IEnumerable<IHandleResponse> handleResponses;
 
         public ApiEndpointExtractPipeline(
             IEnumerable<IPrepareRequest> prepareRequests,
-            IEnumerable<IPrepareNextRequest> prepareNextRequests,
-            IEnumerable<IHandleResponse> handleResponses)
+            IEnumerable<IPrepareNextRequest> prepareNextRequests)
         {
             this.prepareRequests = prepareRequests;
             this.prepareNextRequests = prepareNextRequests;
-            this.handleResponses = handleResponses;
         }
 
         public async Task OnPrepareRequest(PrepareRequestArgs args)
