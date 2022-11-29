@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
-using System.Threading.Tasks;
 
-namespace MIFCore.Hangfire.APIETL.Extract
+namespace MIFCore.Hangfire.APIETL
 {
     public class ApiEndpoint
     {
@@ -23,8 +22,5 @@ namespace MIFCore.Hangfire.APIETL.Extract
         public string HttpClientName { get; }
 
         public IDictionary<string, string> AdditionalHeaders { get; } = new Dictionary<string, string>();
-
-        public delegate Task PrepareRequestDelegate(PrepareRequestArgs args);
-        public delegate Task<IDictionary<string, object>> PrepareNextRequestDelegate(PrepareNextRequestArgs args);
     }
 }

@@ -1,4 +1,4 @@
-﻿namespace MIFCore.Hangfire.APIETL.Extract
+﻿namespace MIFCore.Hangfire.APIETL
 {
     public interface IApiEndpointService { }
 }

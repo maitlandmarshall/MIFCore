@@ -1,4 +1,6 @@
-﻿namespace MIFCore.Hangfire.APIETL.Extract
+﻿using MIFCore.Hangfire.APIETL.Extract;
+
+namespace MIFCore.Hangfire.APIETL.Transform
 {
     public class HandleResponseArgs
     {

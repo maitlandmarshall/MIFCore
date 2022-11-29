@@ -1,6 +1,6 @@
 ﻿namespace MIFCore.Hangfire.APIETL.Extract
 {
-    internal interface IEndpointExtractPipeline : IPrepareRequest, IPrepareNextRequest, IHandleResponse
+    internal interface IEndpointExtractPipeline : IPrepareRequest, IPrepareNextRequest
     {
     }
 }

@@ -1,10 +1,11 @@
-﻿using System.Linq;
+﻿using MIFCore.Hangfire.APIETL.Extract;
+using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 
-namespace MIFCore.Hangfire.APIETL.Extract
+namespace MIFCore.Hangfire.APIETL
 {
-    public static class ApiEndpointServiceExtensions
+    public static class IApiEndpointServiceExtensions
     {
         public static bool RespondsToEndpointName(this IApiEndpointService apiEndpointService, string endpointName)
         {

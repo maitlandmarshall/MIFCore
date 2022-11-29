@@ -1,4 +1,5 @@
 ﻿using Hangfire;
+using MIFCore.Hangfire.APIETL.Transform;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,17 +14,20 @@ namespace MIFCore.Hangfire.APIETL.Extract
         private readonly IApiEndpointRegister apiEndpointRegister;
         private readonly IBackgroundJobClient backgroundJobClient;
         private readonly IEndpointExtractPipeline endpointExtractPipeline;
+        private readonly IApiEndpointTransformPipeline transformPipeline;
 
         public EndpointExtractJob(
             IHttpClientFactory httpClientFactory,
             IApiEndpointRegister apiEndpointRegister,
             IBackgroundJobClient backgroundJobClient,
-            IEndpointExtractPipeline endpointExtractPipeline)
+            IEndpointExtractPipeline endpointExtractPipeline,
+            IApiEndpointTransformPipeline transformPipeline)
         {
             this.httpClientFactory = httpClientFactory;
             this.apiEndpointRegister = apiEndpointRegister;
             this.backgroundJobClient = backgroundJobClient;
             this.endpointExtractPipeline = endpointExtractPipeline;
+            this.transformPipeline = transformPipeline;
         }
 
         [DisableIdenticalQueuedItems]
@@ -67,7 +71,7 @@ namespace MIFCore.Hangfire.APIETL.Extract
             }
             finally
             {
-                await this.endpointExtractPipeline.OnHandleResponse(new HandleResponseArgs(endpoint, apiData));
+                await this.transformPipeline.OnHandleResponse(new HandleResponseArgs(endpoint, apiData));
             }
         }
 
