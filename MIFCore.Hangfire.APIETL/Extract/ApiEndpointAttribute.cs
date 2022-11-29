@@ -5,10 +5,9 @@ namespace MIFCore.Hangfire.APIETL.Extract
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
     public class ApiEndpointAttribute : Attribute
     {
-        public ApiEndpointAttribute(string endpointName, string httpClientName)
+        public ApiEndpointAttribute(string endpointName)
         {
             this.EndpointName = endpointName;
-            this.HttpClientName = httpClientName;
         }
 
         public string EndpointName { get; }

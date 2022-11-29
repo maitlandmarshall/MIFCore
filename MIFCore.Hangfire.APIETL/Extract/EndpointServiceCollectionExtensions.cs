@@ -13,7 +13,7 @@ namespace MIFCore.Hangfire.APIETL.Extract
         {
             assembly ??= Assembly.GetCallingAssembly();
 
-            // Find all endpoint related types in the assembl
+            // Find all endpoint related types in the assembly
             var endpoints = assembly
                 .GetTypes()
                 .Where(y =>

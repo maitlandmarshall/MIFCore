@@ -48,7 +48,9 @@ namespace MIFCore.Hangfire.APIETL.Extract
 
             extractArgs ??= new ExtractArgs(new Dictionary<string, object>(), null);
 
-            var httpClient = this.httpClientFactory.CreateClient(endpoint.HttpClientName);
+            // Default to string.Empty to avoid an error if the endpoint.HttpClientName is null.
+            var httpClient = this.httpClientFactory.CreateClient(endpoint.HttpClientName ?? string.Empty);
+
             var request = await this.CreateRequest(httpClient.BaseAddress, endpoint, extractArgs);
             var apiData = await this.ExecuteRequest(endpoint, httpClient, request, extractArgs);
 
