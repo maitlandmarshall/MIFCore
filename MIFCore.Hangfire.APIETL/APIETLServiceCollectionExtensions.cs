@@ -31,6 +31,7 @@ namespace MIFCore.Hangfire.APIETL
             serviceDescriptors.TryAddSingleton<IApiEndpointRegister, ApiEndpointRegister>();
             serviceDescriptors.TryAddTransient<IApiEndpointFactory, ApiEndpointFactory>();
             serviceDescriptors.TryAddTransient<IApiEndpointExtractPipeline, ApiEndpointExtractPipeline>();
+            serviceDescriptors.TryAddTransient<IApiEndpointTransformPipeline, ApiEndpointTransformPipeline>();
             serviceDescriptors.TryAddScoped<ApiEndpointExtractJob>();
 
             foreach (var t in endpoints)
