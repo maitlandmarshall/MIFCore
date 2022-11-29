@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MIFCore.Hangfire.APIETL.Extract
+namespace MIFCore.Hangfire.APIETL
 {
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
     public class ApiEndpointSelectorAttribute : Attribute

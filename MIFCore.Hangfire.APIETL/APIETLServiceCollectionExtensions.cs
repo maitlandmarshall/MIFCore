@@ -1,14 +1,15 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using MIFCore.Hangfire.APIETL.Extract;
 using MIFCore.Hangfire.APIETL.Transform;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace MIFCore.Hangfire.APIETL.Extract
+namespace MIFCore.Hangfire.APIETL
 {
-    public static class ExtractServiceCollectionExtensions
+    public static class APIETLServiceCollectionExtensions
     {
         public static IServiceCollection AddApiEndpointsToExtract(this IServiceCollection serviceDescriptors, Assembly assembly = null)
         {

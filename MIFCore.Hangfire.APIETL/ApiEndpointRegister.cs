@@ -1,9 +1,10 @@
 ﻿using Hangfire;
+using MIFCore.Hangfire.APIETL.Extract;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace MIFCore.Hangfire.APIETL.Extract
+namespace MIFCore.Hangfire.APIETL
 {
     internal class ApiEndpointRegister : IApiEndpointRegister
     {
