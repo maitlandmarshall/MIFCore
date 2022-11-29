@@ -8,7 +8,7 @@ using System.Reflection;
 
 namespace MIFCore.Hangfire.APIETL.Extract
 {
-    public static class EndpointServiceCollectionExtensions
+    public static class ExtractServiceCollectionExtensions
     {
         public static IServiceCollection AddApiEndpointsToExtract(this IServiceCollection serviceDescriptors, Assembly assembly = null)
         {
@@ -29,8 +29,8 @@ namespace MIFCore.Hangfire.APIETL.Extract
             // Register the services used to register jobs and create ApiEndpoint definitions
             serviceDescriptors.TryAddSingleton<IApiEndpointRegister, ApiEndpointRegister>();
             serviceDescriptors.TryAddTransient<IApiEndpointFactory, ApiEndpointFactory>();
-            serviceDescriptors.TryAddTransient<IEndpointExtractPipeline, EndpointExtractPipeline>();
-            serviceDescriptors.TryAddScoped<EndpointExtractJob>();
+            serviceDescriptors.TryAddTransient<IApiEndpointExtractPipeline, ApiEndpointExtractPipeline>();
+            serviceDescriptors.TryAddScoped<ApiEndpointExtractJob>();
 
             foreach (var t in endpoints)
             {

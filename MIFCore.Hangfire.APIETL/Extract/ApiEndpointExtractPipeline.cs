@@ -5,13 +5,13 @@ using System.Threading.Tasks;
 
 namespace MIFCore.Hangfire.APIETL.Extract
 {
-    internal class EndpointExtractPipeline : IEndpointExtractPipeline
+    internal class ApiEndpointExtractPipeline : IApiEndpointExtractPipeline
     {
         private readonly IEnumerable<IPrepareRequest> prepareRequests;
         private readonly IEnumerable<IPrepareNextRequest> prepareNextRequests;
         private readonly IEnumerable<IHandleResponse> handleResponses;
 
-        public EndpointExtractPipeline(
+        public ApiEndpointExtractPipeline(
             IEnumerable<IPrepareRequest> prepareRequests,
             IEnumerable<IPrepareNextRequest> prepareNextRequests,
             IEnumerable<IHandleResponse> handleResponses)
