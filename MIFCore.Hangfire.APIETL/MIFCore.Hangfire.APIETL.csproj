@@ -12,9 +12,8 @@
 		<PackageTags>Hangfire, Scheduling, Jobs, Simplified, API, ETL</PackageTags>
 		<Description>An add-on to MIFCore which allows users to define API endpoints to extract, transform and load.</Description>
 
-		<Major>1</Major>
-		<Minor>0</Minor>
-		<Build>0</Build>
+		<VersionPrefix>1.0.0</VersionPrefix>
+
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)'=='Debug'">

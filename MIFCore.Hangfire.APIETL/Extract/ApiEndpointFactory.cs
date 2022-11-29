@@ -3,12 +3,12 @@ using System.Linq;
 
 namespace MIFCore.Hangfire.APIETL.Extract
 {
-    internal class ApiEndpointAttributeFactory : IApiEndpointAttributeFactory
+    internal class ApiEndpointFactory : IApiEndpointFactory
     {
-        private readonly IEnumerable<ApiEndpointNameAttribute> endpointNameAttributes;
+        private readonly IEnumerable<ApiEndpointAttribute> endpointNameAttributes;
         private readonly IEnumerable<IDefineEndpoints> endpointDefiners;
 
-        public ApiEndpointAttributeFactory(IEnumerable<ApiEndpointNameAttribute> endpointNameAttributes, IEnumerable<IDefineEndpoints> endpointDefiners)
+        public ApiEndpointFactory(IEnumerable<ApiEndpointAttribute> endpointNameAttributes, IEnumerable<IDefineEndpoints> endpointDefiners)
         {
             this.endpointNameAttributes = endpointNameAttributes;
             this.endpointDefiners = endpointDefiners;
@@ -16,12 +16,12 @@ namespace MIFCore.Hangfire.APIETL.Extract
 
         public async IAsyncEnumerable<ApiEndpoint> Create()
         {
-            // Get the endpoints defined by the ApiEndpointNameAttribute
+            // Get the endpoints defined by the ApiEndpointAttribute
             var endpointsDefinedByAttributes = this.endpointNameAttributes
                 .Select(y => y.EndpointName)
                 .Distinct();
 
-            // Create ApiEndpoint records from the ApiEndpointNameAttribute
+            // Create ApiEndpoint records from the ApiEndpointAttribute
             foreach (var endpointName in endpointsDefinedByAttributes)
             {
                 var endpointDefiners = this.GetEndpointDefiners(endpointName);

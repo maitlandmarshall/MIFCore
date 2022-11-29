@@ -9,9 +9,9 @@ namespace MIFCore.Hangfire.APIETL.Extract
     {
         private readonly IDictionary<string, ApiEndpoint> endpoints = new Dictionary<string, ApiEndpoint>();
         private readonly IRecurringJobManager recurringJobManager;
-        private readonly IApiEndpointAttributeFactory apiEndpointAttributeFactory;
+        private readonly IApiEndpointFactory apiEndpointAttributeFactory;
 
-        public ApiEndpointRegister(IRecurringJobManager recurringJobManager, IApiEndpointAttributeFactory apiEndpointAttributeFactory)
+        public ApiEndpointRegister(IRecurringJobManager recurringJobManager, IApiEndpointFactory apiEndpointAttributeFactory)
         {
             this.recurringJobManager = recurringJobManager;
             this.apiEndpointAttributeFactory = apiEndpointAttributeFactory;

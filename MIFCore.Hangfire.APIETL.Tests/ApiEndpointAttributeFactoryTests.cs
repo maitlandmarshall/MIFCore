@@ -13,8 +13,8 @@ namespace MIFCore.Hangfire.APIETL.Tests
         public async Task Create_WithEndpointDefiner_CreatesEndpointsForEachTenant()
         {
             var serviceProvider = this.GetServiceProvider(typeof(Endpoint1), typeof(TenantedEndpointRegister));
-            var factory = new ApiEndpointAttributeFactory(
-                endpointNameAttributes: serviceProvider.GetRequiredService<IEnumerable<ApiEndpointNameAttribute>>(),
+            var factory = new ApiEndpointFactory(
+                endpointNameAttributes: serviceProvider.GetRequiredService<IEnumerable<ApiEndpointAttribute>>(),
                 endpointDefiners: serviceProvider.GetRequiredService<IEnumerable<IDefineEndpoints>>()
             );
 
@@ -39,7 +39,7 @@ namespace MIFCore.Hangfire.APIETL.Tests
             return serviceCollection.BuildServiceProvider();
         }
 
-        [ApiEndpointName("api/endpoint1")]
+        [ApiEndpoint("api/endpoint1")]
         class Endpoint1 : IPrepareRequest
         {
             public Task OnPrepareRequest(PrepareRequestArgs args)
@@ -48,7 +48,7 @@ namespace MIFCore.Hangfire.APIETL.Tests
             }
         }
 
-        [ApiEndpointName("api/endpoint2")]
+        [ApiEndpoint("api/endpoint2")]
         [ApiEndpointSelector(".*")]
         class TenantedEndpointRegister : IDefineEndpoints
         {

@@ -2,7 +2,7 @@
 
 namespace MIFCore.Hangfire.APIETL.Extract
 {
-    public interface IApiEndpointAttributeFactory
+    public interface IApiEndpointFactory
     {
         IAsyncEnumerable<ApiEndpoint> Create();
     }

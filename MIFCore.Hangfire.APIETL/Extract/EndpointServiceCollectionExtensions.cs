@@ -17,7 +17,7 @@ namespace MIFCore.Hangfire.APIETL.Extract
             var endpoints = assembly
                 .GetTypes()
                 .Where(y =>
-                    y.GetCustomAttributes<ApiEndpointNameAttribute>().Any()
+                    y.GetCustomAttributes<ApiEndpointAttribute>().Any()
                     || y.GetCustomAttributes<ApiEndpointSelectorAttribute>().Any());
 
             return serviceDescriptors.AddApiEndpointsToExtract(endpoints);
@@ -27,18 +27,18 @@ namespace MIFCore.Hangfire.APIETL.Extract
         {
             // Register the services used to register jobs and create ApiEndpoint definitions
             serviceDescriptors.TryAddSingleton<IApiEndpointRegister, ApiEndpointRegister>();
-            serviceDescriptors.TryAddTransient<IApiEndpointAttributeFactory, ApiEndpointAttributeFactory>();
+            serviceDescriptors.TryAddTransient<IApiEndpointFactory, ApiEndpointFactory>();
             serviceDescriptors.TryAddTransient<IEndpointExtractPipeline, EndpointExtractPipeline>();
             serviceDescriptors.TryAddScoped<EndpointExtractJob>();
 
             foreach (var t in endpoints)
             {
-                var endpointNameAttributes = t.GetCustomAttributes<ApiEndpointNameAttribute>();
+                var endpointNameAttributes = t.GetCustomAttributes<ApiEndpointAttribute>();
                 var endpointSelectorAttribute = t.GetCustomAttributes<ApiEndpointSelectorAttribute>();
 
                 if (endpointNameAttributes.Any() == false
                     && endpointSelectorAttribute.Any() == false)
-                    throw new ArgumentException($"The type {t.FullName} does not have an {nameof(ApiEndpointNameAttribute)} or {nameof(ApiEndpointSelectorAttribute)} attribute.");
+                    throw new ArgumentException($"The type {t.FullName} does not have an {nameof(ApiEndpointAttribute)} or {nameof(ApiEndpointSelectorAttribute)} attribute.");
 
                 if (typeof(IDefineEndpoints).IsAssignableFrom(t))
                     serviceDescriptors.AddScoped(typeof(IDefineEndpoints), t);

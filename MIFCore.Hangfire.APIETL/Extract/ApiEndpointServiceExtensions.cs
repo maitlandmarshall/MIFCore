@@ -9,7 +9,7 @@ namespace MIFCore.Hangfire.APIETL.Extract
         public static bool RespondsToEndpointName(this IApiEndpointService apiEndpointService, string endpointName)
         {
             var type = apiEndpointService.GetType();
-            var endpointNameAttributes = type.GetCustomAttributes<ApiEndpointNameAttribute>();
+            var endpointNameAttributes = type.GetCustomAttributes<ApiEndpointAttribute>();
             var endpointSelectorAttributes = type.GetCustomAttributes<ApiEndpointSelectorAttribute>();
 
             if (endpointNameAttributes.Any(y => y.EndpointName == endpointName))
