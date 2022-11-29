@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace MIFCore.Hangfire.APIETL.Extract
+namespace MIFCore.Hangfire.APIETL
 {
     public interface IDefineEndpoints : IApiEndpointService
     {
