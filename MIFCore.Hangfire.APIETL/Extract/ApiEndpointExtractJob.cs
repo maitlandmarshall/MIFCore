@@ -95,8 +95,8 @@ namespace MIFCore.Hangfire.APIETL.Extract
 
         private async Task<HttpRequestMessage> CreateRequest(Uri baseAddress, ApiEndpoint endpoint, ExtractArgs extractArgs)
         {
-            // Create a new request, using endpoint.Name as the relative uri
-            // i.e endpoint.Name = "getStuff" and httpClient.BaseAddress = "https://someapi/api/"
+            // Create a new request, using endpoint.SourceName as the relative uri
+            // i.e endpoint.SourceName = "getStuff" and httpClient.BaseAddress = "https://someapi/api/"
             var request = new HttpRequestMessage
             {
                 RequestUri = new Uri(baseAddress, endpoint.Name)
