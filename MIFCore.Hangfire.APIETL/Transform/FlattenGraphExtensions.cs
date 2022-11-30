@@ -10,6 +10,12 @@ namespace MIFCore.Hangfire.APIETL.Transform
             (expando as IDictionary<string, object>).FlattenGraph();
         }
 
+        public static void FlattenGraph(this IEnumerable<IDictionary<string, object>> rootArray)
+        {
+            foreach (var a in rootArray)
+                a.FlattenGraph();
+        }
+
         public static void FlattenGraph(this IDictionary<string, object> rootDict)
         {
             // iterate and check for nested objects
