@@ -8,6 +8,6 @@ namespace MIFCore.Hangfire.APIETL.Transform
         public GraphObjectSet ParentSet { get; internal set; }
         public string ParentKey { get; internal set; }
 
-        public IEnumerable<IDictionary<string, object>> Objects { get; internal set; }
+        public IList<IDictionary<string, object>> Objects { get; internal set; }
     }
 }

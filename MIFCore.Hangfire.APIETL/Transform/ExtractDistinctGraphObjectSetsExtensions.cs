@@ -9,16 +9,20 @@ namespace MIFCore.Hangfire.APIETL.Transform
 
         public static IEnumerable<GraphObjectSet> ExtractDistinctGraphObjectSets(this IEnumerable<IDictionary<string, object>> root, ExtractDistinctGraphObjectSetsArgs args = null)
         {
+            var objects = new List<IDictionary<string, object>>();
+
             args ??= new ExtractDistinctGraphObjectSetsArgs();
             args.RootObjectSet ??= new GraphObjectSet
             {
-                Objects = root
+                Objects = objects
             };
 
             yield return args.RootObjectSet;
 
             foreach (var rootItem in root)
             {
+                objects.Add(rootItem);
+
                 var nestedObjectSets = rootItem.ExtractDistinctGraphObjectSets(args);
 
                 foreach (var nos in nestedObjectSets)
