@@ -28,7 +28,7 @@ namespace MIFCore.Hangfire.APIETL.Load
             }
 
             var modelProperties = type.GetProperties()
-                .Select(y => new KeyValuePair<PropertyInfo, ApiEndpointModelPropertyAttribute>(y, y.GetCustomAttribute<ApiEndpointModelPropertyAttribute>()))
+                .Select(y => new KeyValuePair<PropertyInfo, Attribute>(y, y.GetCustomAttribute<ApiEndpointModelPropertyAttribute>() as Attribute ?? y.GetCustomAttribute<KeyAttribute>()))
                 .Where(y => y.Value != null)
                 .ToDictionary(
                     keySelector: y => y.Key,
@@ -36,25 +36,25 @@ namespace MIFCore.Hangfire.APIETL.Load
 
             foreach (var (propertyInfo, propertyAttribute) in modelProperties)
             {
-                var sourceName = propertyAttribute.SourceName;
-                var destinationName = propertyAttribute.DestinationName;
-
-                if (string.IsNullOrWhiteSpace(sourceName))
-                {
-                    sourceName = propertyInfo.Name;
-                    destinationName = sourceName;
-                }
-
                 var property = new ApiEndpointModelProperty
                 {
-                    SourceName = sourceName,
-                    DestinationName = destinationName,
                     IsKey = propertyInfo.GetCustomAttribute<KeyAttribute>() != null,
                     SourceType = new HashSet<Type> { propertyInfo.PropertyType },
-                    DestinationType = propertyAttribute.DestinationType
                 };
 
-                model.MappedProperties.Add(sourceName, property);
+                if (propertyAttribute is ApiEndpointModelPropertyAttribute modelPropertyAttribute)
+                {
+                    property.SourceName = modelPropertyAttribute.SourceName;
+                    property.DestinationName = modelPropertyAttribute.DestinationName;
+                }
+
+                if (string.IsNullOrWhiteSpace(property.SourceName))
+                {
+                    property.SourceName = propertyInfo.Name;
+                    property.DestinationName = propertyInfo.Name;
+                }
+
+                model.MappedProperties.Add(property.SourceName, property);
             }
 
             return model;
