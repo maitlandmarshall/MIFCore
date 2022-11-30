@@ -5,31 +5,34 @@ namespace MIFCore.Hangfire.APIETL.Transform
 {
     public static class ExtractDistinctGraphObjectSetsExtensions
     {
-        public static IEnumerable<GraphObjectSet> ExtractDistinctGraphObjectSets(this IEnumerable<IDictionary<string, object>> root)
+        public delegate void TransformObjectDelegate(TransformObjectArgs args);
+
+        public static IEnumerable<GraphObjectSet> ExtractDistinctGraphObjectSets(this IEnumerable<IDictionary<string, object>> root, ExtractDistinctGraphObjectSetsArgs args = null)
         {
-            var rootObjectSet = new GraphObjectSet
+            args ??= new ExtractDistinctGraphObjectSetsArgs();
+            args.RootObjectSet ??= new GraphObjectSet
             {
                 Objects = root
             };
 
-            yield return rootObjectSet;
+            yield return args.RootObjectSet;
 
             foreach (var rootItem in root)
             {
-                var nestedObjectSets = rootItem.ExtractDistinctGraphObjectSets(rootObjectSet);
+                var nestedObjectSets = rootItem.ExtractDistinctGraphObjectSets(args);
 
                 foreach (var nos in nestedObjectSets)
                 {
-                    if (nos.Parent is null)
-                        continue;
-
                     yield return nos;
                 }
             }
         }
 
-        public static IEnumerable<GraphObjectSet> ExtractDistinctGraphObjectSets(this IDictionary<string, object> rootItem, GraphObjectSet rootObjectSet = null)
+        public static IEnumerable<GraphObjectSet> ExtractDistinctGraphObjectSets(this IDictionary<string, object> rootItem, ExtractDistinctGraphObjectSetsArgs args = null)
         {
+            args ??= new ExtractDistinctGraphObjectSetsArgs();
+            var rootObjectSet = args.RootObjectSet;
+
             // If no root object set was passed in (passed in from the IEnumerable version of ExtractDistinctGraphObjectSets)
             // create a new GraphObjectSet to represent this single entity (root entity of the graph)
             if (rootObjectSet is null)
@@ -38,6 +41,8 @@ namespace MIFCore.Hangfire.APIETL.Transform
                 {
                     Objects = new[] { rootItem }
                 };
+
+                args.RootObjectSet = rootObjectSet;
 
                 yield return rootObjectSet;
             }
@@ -52,11 +57,17 @@ namespace MIFCore.Hangfire.APIETL.Transform
                     var childDicts = childObjects.Cast<IDictionary<string, object>>();
 
                     // Get the children of the children
-                    nestedObjectSets = childDicts.ExtractDistinctGraphObjectSets();
+                    nestedObjectSets = childDicts.ExtractDistinctGraphObjectSets(new ExtractDistinctGraphObjectSetsArgs
+                    {
+                        Transform = args.Transform
+                    });
                 }
                 else if (rootValue is IDictionary<string, object> childDict)
                 {
-                    nestedObjectSets = childDict.ExtractDistinctGraphObjectSets();
+                    nestedObjectSets = childDict.ExtractDistinctGraphObjectSets(new ExtractDistinctGraphObjectSetsArgs
+                    {
+                        Transform = args.Transform
+                    });
                 }
                 else
                 {
@@ -80,6 +91,24 @@ namespace MIFCore.Hangfire.APIETL.Transform
                     yield return n;
                 }
             }
+
+            args.Transform?.Invoke(new TransformObjectArgs
+            {
+                Object = rootItem,
+                GraphObjectSet = rootObjectSet
+            });
+        }
+
+        public class TransformObjectArgs
+        {
+            public IDictionary<string, object> Object { get; set; }
+            public GraphObjectSet GraphObjectSet { get; set; }
+        }
+
+        public class ExtractDistinctGraphObjectSetsArgs
+        {
+            internal GraphObjectSet RootObjectSet { get; set; }
+            public TransformObjectDelegate Transform { get; set; }
         }
     }
 }
