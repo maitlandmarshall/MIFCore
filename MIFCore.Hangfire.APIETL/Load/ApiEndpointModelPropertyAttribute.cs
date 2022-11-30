@@ -14,14 +14,13 @@ namespace MIFCore.Hangfire.APIETL.Load
         public ApiEndpointModelPropertyAttribute(string sourceName)
         {
             this.SourceName = sourceName;
-            this.DestinationName = sourceName;
         }
 
         public ApiEndpointModelPropertyAttribute() { }
 
         public string SourceName { get; }
-        public string DestinationName { get; }
 
+        public string DestinationName { get; }
         public string DestinationType { get; set; }
     }
 }
