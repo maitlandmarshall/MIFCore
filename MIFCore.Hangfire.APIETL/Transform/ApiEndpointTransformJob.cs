@@ -12,12 +12,18 @@ namespace MIFCore.Hangfire.APIETL.Transform
         private readonly IApiEndpointTransformPipeline transformPipeline;
         private readonly IEnumerable<ApiEndpointModel> apiEndpointModels;
         private readonly IGetDestinationType getDestinationType;
+        private readonly IApiEndpointLoadJob apiEndpointLoadJob;
 
-        public ApiEndpointTransformJob(IApiEndpointTransformPipeline transformPipeline, IEnumerable<ApiEndpointModel> apiEndpointModels, IGetDestinationType getDestinationType)
+        public ApiEndpointTransformJob(
+            IApiEndpointTransformPipeline transformPipeline,
+            IEnumerable<ApiEndpointModel> apiEndpointModels,
+            IGetDestinationType getDestinationType,
+            IApiEndpointLoadJob apiEndpointLoadJob)
         {
             this.transformPipeline = transformPipeline;
             this.apiEndpointModels = apiEndpointModels;
             this.getDestinationType = getDestinationType;
+            this.apiEndpointLoadJob = apiEndpointLoadJob;
         }
 
         public async Task Transform(ApiEndpoint endpoint, ApiData apiData)
@@ -47,12 +53,16 @@ namespace MIFCore.Hangfire.APIETL.Transform
                     if (model is null)
                         continue;
 
-                    await this.AutoMapModelPropertiesFromApi(set, model);
+                    await this.AutoMapModelPropertiesGraphObjectSet(set, model);
+
+                    var dataToLoad = set.SelectMany(y => y.Objects).ToList();
+
+                    await this.apiEndpointLoadJob.Load(endpoint, model, dataToLoad);
                 }
             }
         }
 
-        private async Task AutoMapModelPropertiesFromApi(IGrouping<string, GraphObjectSet> set, ApiEndpointModel apiEndpointModel)
+        private async Task AutoMapModelPropertiesGraphObjectSet(IGrouping<string, GraphObjectSet> set, ApiEndpointModel apiEndpointModel)
         {
             var allKeyTypes = set.GetKeyTypes();
 

@@ -2,11 +2,13 @@
 {
     public class CreateDestinationArgs
     {
-        public CreateDestinationArgs(ApiEndpointModel apiEndpointModel)
+        public CreateDestinationArgs(ApiEndpoint apiEndpoint, ApiEndpointModel apiEndpointModel)
         {
+            this.ApiEndpoint = apiEndpoint;
             this.ApiEndpointModel = apiEndpointModel;
         }
 
+        public ApiEndpoint ApiEndpoint { get; }
         public ApiEndpointModel ApiEndpointModel { get; }
     }
 }
