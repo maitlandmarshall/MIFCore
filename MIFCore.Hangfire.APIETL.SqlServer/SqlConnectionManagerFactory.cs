@@ -2,7 +2,7 @@
 
 namespace MIFCore.Hangfire.APIETL.SqlServer
 {
-    internal class SqlConnectionManagerFactory
+    internal class SqlConnectionManagerFactory : ISqlConnectionManagerFactory
     {
         private readonly SqlServerConfig sqlServerConfig;
 

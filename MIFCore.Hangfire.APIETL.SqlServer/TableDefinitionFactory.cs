@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace MIFCore.Hangfire.APIETL.SqlServer
 {
-    internal class TableDefinitionFactory
+    internal class TableDefinitionFactory : ITableDefinitionFactory
     {
         private readonly SqlConnectionManagerFactory sqlConnectionManagerFactory;
 

@@ -6,10 +6,10 @@ namespace MIFCore.Hangfire.APIETL.SqlServer
 {
     internal class DefaultSqlServerCreateDestination : ICreateDestination
     {
-        private readonly SqlConnectionManagerFactory sqlConnectionManagerFactory;
-        private readonly TableDefinitionFactory tableDefinitionFactory;
+        private readonly ISqlConnectionManagerFactory sqlConnectionManagerFactory;
+        private readonly ITableDefinitionFactory tableDefinitionFactory;
 
-        public DefaultSqlServerCreateDestination(SqlConnectionManagerFactory sqlConnectionManagerFactory, TableDefinitionFactory tableDefinitionFactory)
+        public DefaultSqlServerCreateDestination(ISqlConnectionManagerFactory sqlConnectionManagerFactory, ITableDefinitionFactory tableDefinitionFactory)
         {
             this.sqlConnectionManagerFactory = sqlConnectionManagerFactory;
             this.tableDefinitionFactory = tableDefinitionFactory;
