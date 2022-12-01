@@ -1,11 +1,12 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace MIFCore.Hangfire.APIETL.Transform
 {
     public static class ExtractDistinctGraphObjectSetsExtensions
     {
-        public delegate void TransformObjectDelegate(TransformObjectArgs args);
+        public delegate Task TransformObjectDelegate(TransformObjectArgs args);
 
         public static IEnumerable<GraphObjectSet> ExtractDistinctGraphObjectSets(this IEnumerable<IDictionary<string, object>> root, ExtractDistinctGraphObjectSetsArgs args = null)
         {

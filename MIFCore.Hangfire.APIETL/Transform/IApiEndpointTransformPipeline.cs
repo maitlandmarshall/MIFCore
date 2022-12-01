@@ -1,6 +1,6 @@
 ﻿namespace MIFCore.Hangfire.APIETL.Transform
 {
-    internal interface IApiEndpointTransformPipeline : IHandleResponse
+    internal interface IApiEndpointTransformPipeline : IHandleResponse, IParseResponse, ITransformModel
     {
     }
 }

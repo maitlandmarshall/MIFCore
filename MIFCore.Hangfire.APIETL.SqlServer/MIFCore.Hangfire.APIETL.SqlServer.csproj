@@ -9,11 +9,13 @@
 		<RepositoryType>git</RepositoryType>
 		<IsPackable>true</IsPackable>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-		<PackageTags>Hangfire, Scheduling, Jobs, Simplified, API, ETL</PackageTags>
-		<Description>An add-on to MIFCore which allows users to define API endpoints to extract, transform and load.</Description>
+		<PackageTags>Hangfire, Scheduling, Jobs, Simplified, API, ETL, SqlServer</PackageTags>
+		<Description>ETL for SqlServer.</Description>
+		<LangVersion>10</LangVersion>
+	</PropertyGroup>
 
+	<PropertyGroup>
 		<VersionPrefix>1.0.0</VersionPrefix>
-
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
@@ -21,14 +23,8 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
-		<PackageReference Include="Microsoft.Extensions.Http" Version="7.0.0" />
-		<PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
-		<PackageReference Include="Humanizer.Core" Version="2.14.1" />
+	  <ProjectReference Include="..\MIFCore.Hangfire.APIETL\MIFCore.Hangfire.APIETL.csproj" />
 	</ItemGroup>
 
-	<ItemGroup>
-		<ProjectReference Include="..\MIFCore.Hangfire\MIFCore.Hangfire.csproj" />
-	</ItemGroup>
 
 </Project>
