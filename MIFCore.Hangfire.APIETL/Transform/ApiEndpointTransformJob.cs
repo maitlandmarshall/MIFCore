@@ -20,7 +20,7 @@ namespace MIFCore.Hangfire.APIETL.Transform
             this.getDestinationType = getDestinationType;
         }
 
-        public async Task ExecuteTransformationJob(ApiEndpoint endpoint, ApiData apiData)
+        public async Task Transform(ApiEndpoint endpoint, ApiData apiData)
         {
             await this.transformPipeline.OnHandleResponse(new HandleResponseArgs(endpoint, apiData));
             var data = await this.transformPipeline.OnParse(new ParseResponseArgs(endpoint, apiData));

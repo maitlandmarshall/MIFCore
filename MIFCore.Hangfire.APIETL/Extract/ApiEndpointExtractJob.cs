@@ -59,11 +59,12 @@ namespace MIFCore.Hangfire.APIETL.Extract
             var apiData = await this.ExecuteRequest(endpoint, httpClient, request, extractArgs);
 
             var nextRequestData = await this.endpointExtractPipeline.OnPrepareNextRequest(new PrepareNextRequestArgs(endpoint: endpoint, apiData: apiData, data: extractArgs.RequestData));
+            var isLastRequest = nextRequestData.Keys.Any() == false;
 
             try
             {
                 // If OnPrepareNextRequest returns an empty dict, then we're done with this endpoint.
-                if (nextRequestData.Keys.Any() == false)
+                if (isLastRequest)
                     return;
 
                 // Otherwise we need to schedule another job to continue extracting this endpoint.
@@ -71,7 +72,7 @@ namespace MIFCore.Hangfire.APIETL.Extract
             }
             finally
             {
-                await this.endpointTransformJob.ExecuteTransformationJob(endpoint, apiData);
+                await this.endpointTransformJob.Transform(endpoint, apiData);
             }
         }
 

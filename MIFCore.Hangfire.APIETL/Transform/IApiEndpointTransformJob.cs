@@ -5,6 +5,6 @@ namespace MIFCore.Hangfire.APIETL.Transform
 {
     public interface IApiEndpointTransformJob
     {
-        Task ExecuteTransformationJob(ApiEndpoint endpoint, ApiData apiData);
+        Task Transform(ApiEndpoint endpoint, ApiData apiData);
     }
 }
