@@ -17,7 +17,8 @@ namespace MIFCore.Hangfire.APIETL.Load
             // Ensure the destination is created
             await this.loadPipeline.OnCreateDestination(new CreateDestinationArgs(apiEndpoint, model));
 
-
+            // Now load the data into the destination
+            await this.loadPipeline.OnLoadData(new LoadDataArgs(apiEndpoint, model, dataToLoad));
         }
     }
 }
