@@ -52,6 +52,7 @@ namespace MIFCore.Hangfire.APIETL.SqlServer
 
             source.LinkTo(merge);
             await source.ExecuteAsync();
+            await merge.Completion;
         }
 
         private List<ExpandoObject> GetDataToLoad(LoadDataArgs args)
