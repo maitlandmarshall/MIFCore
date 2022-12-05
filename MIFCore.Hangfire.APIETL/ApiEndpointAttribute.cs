@@ -10,7 +10,14 @@ namespace MIFCore.Hangfire.APIETL
             this.EndpointName = endpointName;
         }
 
+        public ApiEndpointAttribute(string endpointName, string inputPath)
+        {
+            this.EndpointName = endpointName;
+            this.InputPath = inputPath;
+        }
+
         public string EndpointName { get; }
         public string HttpClientName { get; set; }
+        public string InputPath { get; }
     }
 }

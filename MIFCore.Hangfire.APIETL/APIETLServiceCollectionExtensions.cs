@@ -81,6 +81,12 @@ namespace MIFCore.Hangfire.APIETL
                 if (typeof(ILoadData).IsAssignableFrom(t))
                     serviceDescriptors.AddScoped(typeof(ILoadData), t);
 
+                if (endpointModelAttributes.Any())
+                {
+                    var endpointModel = t.GetApiEndpointModel();
+                    serviceDescriptors.AddSingleton<ApiEndpointModel>(endpointModel);
+                }
+
                 // Register the endpoint name attribute, so an ApiEndpoint is created from it
                 if (endpointNameAttributes.Any())
                 {

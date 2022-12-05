@@ -44,7 +44,7 @@ namespace MIFCore.Hangfire.APIETL.Transform
         public async Task OnTransformModel(TransformModelArgs args)
         {
             var relatedTransformModels = this.transformModels
-               .Where(y => y.RespondsToEndpointName(args.Endpoint.Name));
+               .Where(y => y.RespondsToEndpointName(args.Endpoint.Name, args.Transform.GraphObjectSet.ParentKey));
 
             foreach (var transformModel in relatedTransformModels)
             {

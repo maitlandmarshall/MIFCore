@@ -15,22 +15,24 @@ namespace MIFCore.Hangfire.APIETL
             return endpointNameAttributes.Any() == false && endpointSelectorAttributes.Any() == false;
         }
 
-        public static bool RespondsToEndpointName(this IApiEndpointService apiEndpointService, string endpointName)
+        public static bool RespondsToEndpointName(this IApiEndpointService apiEndpointService, string endpointName, string inputPath = null)
         {
             var type = apiEndpointService.GetType();
             var endpointNameAttributes = type.GetCustomAttributes<ApiEndpointAttribute>();
             var endpointSelectorAttributes = type.GetCustomAttributes<ApiEndpointSelectorAttribute>();
 
-            if (endpointNameAttributes.Any(y => y.EndpointName == endpointName))
+            if (endpointNameAttributes.Any(y => y.EndpointName == endpointName && y.InputPath == inputPath))
             {
                 return true;
             }
             else if (endpointSelectorAttributes.Any())
             {
-                return endpointSelectorAttributes.Any(y => Regex.IsMatch(endpointName, y.Regex));
+                return endpointSelectorAttributes.Any(y => Regex.IsMatch(endpointName, y.Regex) && y.InputPath == inputPath);
             }
-
-            return false;
+            else
+            {
+                return false;
+            }
         }
     }
 }

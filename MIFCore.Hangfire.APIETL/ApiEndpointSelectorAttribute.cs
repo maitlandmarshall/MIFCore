@@ -10,6 +10,13 @@ namespace MIFCore.Hangfire.APIETL
             this.Regex = regex;
         }
 
+        public ApiEndpointSelectorAttribute(string regex, string inputPath)
+        {
+            this.Regex = regex;
+            this.InputPath = inputPath;
+        }
+
         public string Regex { get; }
+        public string InputPath { get; }
     }
 }
