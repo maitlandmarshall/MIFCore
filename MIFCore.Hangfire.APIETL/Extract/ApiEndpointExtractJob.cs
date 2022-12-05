@@ -61,19 +61,14 @@ namespace MIFCore.Hangfire.APIETL.Extract
             var nextRequestData = await this.endpointExtractPipeline.OnPrepareNextRequest(new PrepareNextRequestArgs(endpoint: endpoint, apiData: apiData, data: extractArgs.RequestData));
             var isLastRequest = nextRequestData.Keys.Any() == false;
 
-            try
-            {
-                // If OnPrepareNextRequest returns an empty dict, then we're done with this endpoint.
-                if (isLastRequest)
-                    return;
+            await this.endpointTransformJob.Transform(endpoint, apiData);
 
-                // Otherwise we need to schedule another job to continue extracting this endpoint.
-                this.backgroundJobClient.Enqueue<IApiEndpointExtractJob>(y => y.Extract(endpoint.Name, new ExtractArgs(nextRequestData, apiData.Id)));
-            }
-            finally
-            {
-                await this.endpointTransformJob.Transform(endpoint, apiData);
-            }
+            // If OnPrepareNextRequest returns an empty dict, then we're done with this endpoint.
+            if (isLastRequest)
+                return;
+
+            // Otherwise we need to schedule another job to continue extracting this endpoint.
+            this.backgroundJobClient.Enqueue<IApiEndpointExtractJob>(y => y.Extract(endpoint.Name, new ExtractArgs(nextRequestData, apiData.Id)));
         }
 
         private async Task<ApiData> ExecuteRequest(ApiEndpoint endpoint, HttpClient httpClient, HttpRequestMessage request, ExtractArgs extractArgs)
