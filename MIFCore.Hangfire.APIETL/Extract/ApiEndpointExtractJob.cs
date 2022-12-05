@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace MIFCore.Hangfire.APIETL.Extract
 {
-    internal class ApiEndpointExtractJob
+    internal class ApiEndpointExtractJob : IApiEndpointExtractJob
     {
         private readonly IHttpClientFactory httpClientFactory;
         private readonly IApiEndpointRegister apiEndpointRegister;
@@ -68,7 +68,7 @@ namespace MIFCore.Hangfire.APIETL.Extract
                     return;
 
                 // Otherwise we need to schedule another job to continue extracting this endpoint.
-                this.backgroundJobClient.Enqueue<ApiEndpointExtractJob>(y => y.Extract(endpoint.Name, new ExtractArgs(nextRequestData, apiData.Id)));
+                this.backgroundJobClient.Enqueue<IApiEndpointExtractJob>(y => y.Extract(endpoint.Name, new ExtractArgs(nextRequestData, apiData.Id)));
             }
             finally
             {
@@ -113,18 +113,6 @@ namespace MIFCore.Hangfire.APIETL.Extract
             await this.endpointExtractPipeline.OnPrepareRequest(new PrepareRequestArgs(endpoint, request, extractArgs.RequestData));
 
             return request;
-        }
-
-        public class ExtractArgs
-        {
-            public ExtractArgs(IDictionary<string, object> requestData, Guid? parentApiDataId)
-            {
-                this.RequestData = requestData;
-                this.ParentApiDataId = parentApiDataId;
-            }
-
-            public IDictionary<string, object> RequestData { get; set; }
-            public Guid? ParentApiDataId { get; set; }
         }
     }
 }

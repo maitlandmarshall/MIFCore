@@ -24,7 +24,7 @@ namespace MIFCore.Hangfire.APIETL
         {
             this.endpoints.Add(endpoint.Name, endpoint);
 
-            this.recurringJobManager.AddOrUpdate<ApiEndpointExtractJob>(
+            this.recurringJobManager.AddOrUpdate<IApiEndpointExtractJob>(
                 endpoint.JobName,
                 job => job.Extract(endpoint.Name, null),
                 Cron.Daily()

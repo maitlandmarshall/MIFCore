@@ -10,10 +10,10 @@ namespace MIFCore.Hangfire.APIETL.SqlServer
 {
     internal class DefaultSqlServerLoadData : ILoadData
     {
-        private readonly SqlConnectionManagerFactory sqlConnectionManagerFactory;
-        private readonly TableDefinitionFactory tableDefinitionFactory;
+        private readonly ISqlConnectionManagerFactory sqlConnectionManagerFactory;
+        private readonly ITableDefinitionFactory tableDefinitionFactory;
 
-        public DefaultSqlServerLoadData(SqlConnectionManagerFactory sqlConnectionManagerFactory, TableDefinitionFactory tableDefinitionFactory)
+        public DefaultSqlServerLoadData(ISqlConnectionManagerFactory sqlConnectionManagerFactory, ITableDefinitionFactory tableDefinitionFactory)
         {
             this.sqlConnectionManagerFactory = sqlConnectionManagerFactory;
             this.tableDefinitionFactory = tableDefinitionFactory;

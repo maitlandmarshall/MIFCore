@@ -7,9 +7,9 @@ namespace MIFCore.Hangfire.APIETL.SqlServer
 {
     internal class TableDefinitionFactory : ITableDefinitionFactory
     {
-        private readonly SqlConnectionManagerFactory sqlConnectionManagerFactory;
+        private readonly ISqlConnectionManagerFactory sqlConnectionManagerFactory;
 
-        public TableDefinitionFactory(SqlConnectionManagerFactory sqlConnectionManagerFactory)
+        public TableDefinitionFactory(ISqlConnectionManagerFactory sqlConnectionManagerFactory)
         {
             this.sqlConnectionManagerFactory = sqlConnectionManagerFactory;
         }
