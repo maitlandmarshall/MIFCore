@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using MIFCore.Hangfire.APIETL.Load;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace MIFCore.Hangfire.APIETL
@@ -6,19 +7,25 @@ namespace MIFCore.Hangfire.APIETL
     internal class ApiEndpointFactory : IApiEndpointFactory
     {
         private readonly IEnumerable<ApiEndpointAttribute> endpointNameAttributes;
+        private readonly IEnumerable<ApiEndpointModel> apiEndpointModels;
         private readonly IEnumerable<IDefineEndpoints> endpointDefiners;
 
-        public ApiEndpointFactory(IEnumerable<ApiEndpointAttribute> endpointNameAttributes, IEnumerable<IDefineEndpoints> endpointDefiners)
+        public ApiEndpointFactory(
+            IEnumerable<ApiEndpointAttribute> apiEndpointAttributes,
+            IEnumerable<ApiEndpointModel> apiEndpointModels,
+            IEnumerable<IDefineEndpoints> endpointDefiners)
         {
-            this.endpointNameAttributes = endpointNameAttributes;
+            this.endpointNameAttributes = apiEndpointAttributes;
+            this.apiEndpointModels = apiEndpointModels;
             this.endpointDefiners = endpointDefiners;
         }
 
         public async IAsyncEnumerable<ApiEndpoint> Create()
         {
-            // Get the endpoints defined by the ApiEndpointAttribute
+            // Get the endpoints defined by the ApiEndpoint or by the ApiEndpointModels apis
             var endpointsDefinedByAttributes = this.endpointNameAttributes
                 .Select(y => y.EndpointName)
+                .Union(this.apiEndpointModels.Select(x => x.EndpointName))
                 .Distinct();
 
             // Create ApiEndpoint records from the ApiEndpointAttribute
