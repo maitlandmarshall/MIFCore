@@ -2,6 +2,7 @@
 using MIFCore.Hangfire.APIETL.Extract;
 using MIFCore.Hangfire.APIETL.Load;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -29,12 +30,12 @@ namespace MIFCore.Hangfire.APIETL.Transform
         public async Task Transform(ApiEndpoint endpoint, ApiData apiData)
         {
             await this.transformPipeline.OnHandleResponse(new HandleResponseArgs(endpoint, apiData));
-            var data = await this.transformPipeline.OnParse(new ParseResponseArgs(endpoint, apiData));
+            var parsedData = await this.transformPipeline.OnParse(new ParseResponseArgs(endpoint, apiData));
 
-            if (data != null)
+            if (parsedData != null)
             {
                 // Get all the different object sets and group them by the ParentKey
-                var graphObjectSets = data.ExtractDistinctGraphObjectSets(
+                var graphObjectSets = parsedData.ExtractDistinctGraphObjectSets(
                     new ExtractDistinctGraphObjectSetsExtensions.ExtractDistinctGraphObjectSetsArgs
                     {
                         Transform = async (args) =>
@@ -47,15 +48,53 @@ namespace MIFCore.Hangfire.APIETL.Transform
 
                 foreach (var set in graphObjectSets)
                 {
+                    // Has the user of the library defined any endpoint models for this object set?
                     var model = this.apiEndpointModels.
                         FirstOrDefault(y => y.EndpointName == endpoint.Name && y.InputPath == set.Key);
 
+                    // If they haven't, do nothing
                     if (model is null)
                         continue;
 
+                    // There may be properties in the API response that we haven't mapped.
+                    // Automatically generate properties from the response so they can load into the destination
                     await this.AutoMapModelPropertiesGraphObjectSet(set, model);
 
+                    // Generate a flat list of items to load
                     var dataToLoad = set.SelectMany(y => y.Objects).ToList();
+
+                    // The parsedData from the API may need to be parsed into .net CLR types as defined by the ApiEndpointModelProperty SourceTypes
+                    var propertiesWithClrType = model.MappedProperties
+                        .Values
+                        .Where(y => y.SourceType.Where(y => y != null).Any())
+                        .ToList();
+
+                    foreach (var prop in propertiesWithClrType)
+                    {
+                        // Get the clr type the property should have
+                        var clrType = prop.SourceType.First(y => y != null);
+                        var typeConverter = TypeDescriptor.GetConverter(clrType);
+
+                        foreach (var data in dataToLoad)
+                        {
+                            // Try to get the property from the data object
+                            if (data.TryGetValue(prop.SourceName, out var propValue))
+                            {
+                                // Do nothing if its null
+                                if (propValue is null)
+                                    continue;
+
+                                var propValueType = propValue.GetType();
+
+                                // Make sure the propValueType is different from the clrType, otherwise a conversion is not necessary
+                                if (propValueType != clrType
+                                    && typeConverter.CanConvertFrom(propValueType))
+                                {
+                                    data[prop.SourceName] = typeConverter.ConvertFrom(propValue);
+                                }
+                            }
+                        }
+                    }
 
                     await this.apiEndpointLoadJob.Load(endpoint, model, dataToLoad);
                 }
@@ -79,6 +118,7 @@ namespace MIFCore.Hangfire.APIETL.Transform
             // Now we have validKeyTypes which represent the destination table schema
             foreach (var (key, types) in validKeyTypes)
             {
+                // The key could have already been added to the model via ApiEndpointModel API
                 if (apiEndpointModel.MappedProperties.TryGetValue(key, out var apiEndpointModelProperty) == false)
                 {
                     apiEndpointModelProperty = new ApiEndpointModelProperty
@@ -91,6 +131,8 @@ namespace MIFCore.Hangfire.APIETL.Transform
 
                     apiEndpointModel.MappedProperties.Add(key, apiEndpointModelProperty);
                 }
+
+                // If it has already been added, the destination type may be unknown. If so we can try to determine it from the API response types.
                 else
                 {
                     if (string.IsNullOrWhiteSpace(apiEndpointModelProperty.DestinationType))
