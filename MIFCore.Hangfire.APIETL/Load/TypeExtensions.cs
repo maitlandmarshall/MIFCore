@@ -39,13 +39,14 @@ namespace MIFCore.Hangfire.APIETL.Load
                 var property = new ApiEndpointModelProperty
                 {
                     IsKey = propertyInfo.GetCustomAttribute<KeyAttribute>() != null,
-                    SourceType = new HashSet<Type> { propertyInfo.PropertyType },
+                    SourceType = new HashSet<Type> { propertyInfo.PropertyType }
                 };
 
                 if (propertyAttribute is ApiEndpointModelPropertyAttribute modelPropertyAttribute)
                 {
                     property.SourceName = modelPropertyAttribute.SourceName;
                     property.DestinationName = modelPropertyAttribute.DestinationName;
+                    property.DestinationType = modelPropertyAttribute.DestinationType;
                 }
 
                 if (string.IsNullOrWhiteSpace(property.SourceName))
