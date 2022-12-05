@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Dynamic;
+using System.Linq;
 
 namespace MIFCore.Hangfire.APIETL.Transform
 {
@@ -18,8 +19,10 @@ namespace MIFCore.Hangfire.APIETL.Transform
 
         public static void FlattenGraph(this IDictionary<string, object> rootDict)
         {
+            var keys = rootDict.Keys.ToList();
+
             // iterate and check for nested objects
-            foreach (var rootKey in rootDict.Keys)
+            foreach (var rootKey in keys)
             {
                 var rootValue = rootDict[rootKey];
 
