@@ -26,7 +26,7 @@ namespace MIFCore.Hangfire.APIETL.SqlServer
             var connMan = this.sqlConnectionManagerFactory.Create();
 
             var source = new MemorySource(this.GetDataToLoad(args));
-            var merge = new DbMerge(connMan, apiEndpointModel.DestinationName)
+            var merge = new DbMerge(connMan, tableDefinition.Name)
             {
                 DestinationTableDefinition = tableDefinition,
                 MergeMode = MergeMode.InsertsAndUpdates,

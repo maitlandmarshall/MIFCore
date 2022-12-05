@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MIFCore.Hangfire.APIETL.Extract;
+using MIFCore.Hangfire.APIETL.Load;
 
 namespace MIFCore.Hangfire.APIETL.Tests
 {
@@ -14,8 +15,9 @@ namespace MIFCore.Hangfire.APIETL.Tests
         {
             var serviceProvider = this.GetServiceProvider(typeof(Endpoint1), typeof(TenantedEndpointRegister));
             var factory = new ApiEndpointFactory(
-                endpointNameAttributes: serviceProvider.GetRequiredService<IEnumerable<ApiEndpointAttribute>>(),
-                endpointDefiners: serviceProvider.GetRequiredService<IEnumerable<IDefineEndpoints>>()
+                apiEndpointAttributes: serviceProvider.GetRequiredService<IEnumerable<ApiEndpointAttribute>>(),
+                endpointDefiners: serviceProvider.GetRequiredService<IEnumerable<IDefineEndpoints>>(),
+                apiEndpointModels: new List<ApiEndpointModel>()
             );
 
             // There should be four endpoints total, api/endpoint1, api/endpoint2 but duplicated for each "tenant"

@@ -16,6 +16,11 @@ namespace MIFCore.Hangfire.APIETL.SqlServer
 
         public async Task<TableDefinition> Create(string tableName)
         {
+            if (tableName.Contains(".") == false)
+            {
+                tableName = $"dbo.{tableName}";
+            }
+
             var connMan = this.sqlConnectionManagerFactory.Create();
             return await Task.Run(() => TableDefinition.FromTableName(connMan, tableName));
         }
