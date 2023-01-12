@@ -44,6 +44,14 @@ namespace MIFCore.Hangfire.APIETL.Transform
                     // Remove the original rootKey from the rootDict as all the properties have been merged into it
                     rootDict.Remove(rootKey, out _);
                 }
+                else if (rootValue is IEnumerable<object> array)
+                {
+                    var items = array
+                        .Cast<IDictionary<string, object>>()
+                        .ToList();
+
+                    items.FlattenGraph();
+                }
             }
         }
     }
