@@ -93,6 +93,11 @@ namespace MIFCore.Hangfire.APIETL.Transform
                                     data[prop.SourceName] = typeConverter.ConvertFrom(propValue);
                                 }
                             }
+                            else
+                            {
+                                // Ensure all the dataToLoad items have all the properties defined in the model, even if just null.
+                                data[prop.SourceName] = null;
+                            }
                         }
                     }
 
