@@ -61,7 +61,7 @@ namespace MIFCore.Hangfire.APIETL.Extract
             var nextRequestData = await this.endpointExtractPipeline.OnPrepareNextRequest(new PrepareNextRequestArgs(endpoint: endpoint, apiData: apiData, data: extractArgs.RequestData));
             var isLastRequest = nextRequestData.Keys.Any() == false;
 
-            await this.endpointTransformJob.Transform(endpoint, apiData);
+            await this.endpointTransformJob.Transform(endpoint, apiData, extractArgs);
 
             // If OnPrepareNextRequest returns an empty dict, then we're done with this endpoint.
             if (isLastRequest)
@@ -71,31 +71,26 @@ namespace MIFCore.Hangfire.APIETL.Extract
             this.backgroundJobClient.Enqueue<IApiEndpointExtractJob>(y => y.Extract(endpoint.Name, new ExtractArgs(nextRequestData, apiData.Id)));
         }
 
-        private async Task<ApiData> ExecuteRequest(ApiEndpoint endpoint, HttpClient httpClient, HttpRequestMessage request, ExtractArgs extractArgs)
-        {
-            // Get the response payload as a string
-            var response = await httpClient.SendAsync(request);
-            var data = await response.Content.ReadAsStringAsync();
-
-            // Turn the payload response into an ApiData instance
-            var apiData = new ApiData
-            {
-                Endpoint = endpoint.Name,
-                Uri = response.RequestMessage.RequestUri.ToString(),
-                Data = data,
-                ParentId = extractArgs.ParentApiDataId
-            };
-
-            return apiData;
-        }
-
         private async Task<HttpRequestMessage> CreateRequest(Uri baseAddress, ApiEndpoint endpoint, ExtractArgs extractArgs)
         {
+            var endpointName = endpoint.Name;
+
+            if (endpoint.RouteParameters.Any())
+            {
+                // If there are route parameters, then we need to replace the route parameters with the values from the extractArgs.RequestData
+                // e.g. if the endpoint.SourceName = "getStuff/{id}" and extractArgs.RequestData["id"] = 123, then endpoint.SourceName = "getStuff/123"
+                foreach (var routeParameter in endpoint.RouteParameters)
+                {
+                    var routeParameterValue = extractArgs.RequestData[routeParameter];
+                    endpointName = endpointName.Replace($"{{{routeParameter}}}", routeParameterValue.ToString());
+                }
+            }
+
             // Create a new request, using endpoint.SourceName as the relative uri
             // i.e endpoint.SourceName = "getStuff" and httpClient.BaseAddress = "https://someapi/api/"
             var request = new HttpRequestMessage
             {
-                RequestUri = new Uri(baseAddress, endpoint.Name)
+                RequestUri = new Uri(baseAddress, endpointName)
             };
 
             // Stitch on any additional headers
@@ -108,6 +103,26 @@ namespace MIFCore.Hangfire.APIETL.Extract
             await this.endpointExtractPipeline.OnPrepareRequest(new PrepareRequestArgs(endpoint, request, extractArgs.RequestData));
 
             return request;
+        }
+
+        private async Task<ApiData> ExecuteRequest(ApiEndpoint endpoint, HttpClient httpClient, HttpRequestMessage request, ExtractArgs extractArgs)
+        {
+            // Get the response payload as a string
+            var response = await httpClient.SendAsync(request);
+            response.EnsureSuccessStatusCode();
+
+            var data = await response.Content.ReadAsStringAsync();
+
+            // Turn the payload response into an ApiData instance
+            var apiData = new ApiData
+            {
+                Endpoint = endpoint.Name,
+                Uri = response.RequestMessage.RequestUri.ToString(),
+                Data = data,
+                ParentId = extractArgs.ParentApiDataId
+            };
+
+            return apiData;
         }
     }
 }

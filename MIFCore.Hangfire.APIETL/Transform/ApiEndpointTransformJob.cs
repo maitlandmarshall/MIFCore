@@ -27,10 +27,10 @@ namespace MIFCore.Hangfire.APIETL.Transform
             this.apiEndpointLoadJob = apiEndpointLoadJob;
         }
 
-        public async Task Transform(ApiEndpoint endpoint, ApiData apiData)
+        public async Task Transform(ApiEndpoint endpoint, ApiData apiData, ExtractArgs extractArgs)
         {
-            await this.transformPipeline.OnHandleResponse(new HandleResponseArgs(endpoint, apiData));
-            var parsedData = await this.transformPipeline.OnParse(new ParseResponseArgs(endpoint, apiData));
+            await this.transformPipeline.OnHandleResponse(new HandleResponseArgs(endpoint, apiData, extractArgs));
+            var parsedData = await this.transformPipeline.OnParse(new ParseResponseArgs(endpoint, apiData, extractArgs));
 
             if (parsedData != null)
             {
@@ -40,7 +40,7 @@ namespace MIFCore.Hangfire.APIETL.Transform
                     {
                         Transform = async (args) =>
                         {
-                            await this.transformPipeline.OnTransformModel(new TransformModelArgs(endpoint, apiData, args));
+                            await this.transformPipeline.OnTransformModel(new TransformModelArgs(endpoint, apiData, extractArgs, args));
                         }
                     })
                     .GroupBy(y => y.ParentKey)

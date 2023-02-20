@@ -24,6 +24,10 @@ namespace MIFCore.Hangfire.APIETL
         {
             this.endpoints.Add(endpoint.Name, endpoint);
 
+            // If the endpoint has route parameters, then we don't want to register it as a recurring job.
+            if (endpoint.RouteParameters.Any())
+                return this;
+
             this.recurringJobManager.AddOrUpdate<IApiEndpointExtractJob>(
                 endpoint.JobName,
                 job => job.Extract(endpoint.Name, null),

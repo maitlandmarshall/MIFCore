@@ -5,7 +5,7 @@ namespace MIFCore.Hangfire.APIETL.Transform
 {
     public class TransformModelArgs : ResponseArgsBase
     {
-        public TransformModelArgs(ApiEndpoint endpoint, ApiData apiData, TransformObjectArgs transformArgs) : base(endpoint, apiData)
+        public TransformModelArgs(ApiEndpoint endpoint, ApiData apiData, ExtractArgs extractArgs, TransformObjectArgs transformArgs) : base(endpoint, apiData, extractArgs)
         {
             this.Transform = transformArgs;
         }
