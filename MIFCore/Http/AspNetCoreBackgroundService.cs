@@ -1,9 +1,11 @@
 ﻿using Hangfire;
-using MIFCore.Common;
+using Hangfire.Dashboard;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using MIFCore.Common;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -64,7 +66,7 @@ namespace MIFCore.Http
                 return this.aspNetCoreConfig.BindingServer.Value;
 
             // Otherwise by default, on ports 80 / 443, use HttpSys so the ports can be shared
-            if (this.aspNetCoreConfig.BindingPort == 80 
+            if (this.aspNetCoreConfig.BindingPort == 80
                 || this.aspNetCoreConfig.BindingPort == 443)
             {
                 return WebServer.HttpSys;
@@ -77,10 +79,23 @@ namespace MIFCore.Http
 
         private void Configure(IApplicationBuilder app)
         {
+            var hangfireConfig = Globals.DefaultConfiguration.GetSection("Hangfire");
+            var dashboardTitle = hangfireConfig.GetValue("DashboardTitle", Assembly.GetEntryAssembly()?.GetName().Name ?? "Hangfire");
+            var enableRemoteAuth = hangfireConfig.GetValue("EnableRemoteAuth", false);
+            var enableDarkMode = hangfireConfig.GetValue("EnableDarkMode", true);
+
             var dashboardOptions = new DashboardOptions
             {
-                DashboardTitle = $"{Assembly.GetEntryAssembly().GetName().Name} Dashboard"
+                DashboardTitle = $"{Assembly.GetEntryAssembly().GetName().Name} Dashboard",
+                DarkModeEnabled = enableDarkMode,
             };
+
+            // If enableRemoteAuth, set the authorization array to null to bypass the default LocalRequestsOnlyAuthorizationFilter
+            // https://github.com/HangfireIO/Hangfire/blob/master/src/Hangfire.Core/DashboardOptions.cs#L23
+            if (enableRemoteAuth)
+            {
+                dashboardOptions.Authorization = new IDashboardAuthorizationFilter[] { };
+            }
 
             if (!string.IsNullOrEmpty(this.aspNetCoreConfig.BindingPath)) app.UsePathBase($"/{this.aspNetCoreConfig.BindingPath}");
 
