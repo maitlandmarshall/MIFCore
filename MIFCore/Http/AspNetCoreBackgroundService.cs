@@ -86,7 +86,7 @@ namespace MIFCore.Http
 
             var dashboardOptions = new DashboardOptions
             {
-                DashboardTitle = $"{Assembly.GetEntryAssembly().GetName().Name} Dashboard",
+                DashboardTitle = dashboardTitle,
                 DarkModeEnabled = enableDarkMode,
             };
 
