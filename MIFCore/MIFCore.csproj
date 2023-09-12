@@ -14,7 +14,7 @@
 		<Description>Provides an IntegrationHost which allows you to build integrations using Hangfire and AspNetCore</Description>
 		<Major>1</Major>
 		<Minor>0</Minor>
-		<Build>2</Build>
+		<Build>5</Build>
 		<Revision>0</Revision>
 
 		<Version>$(Major).$(Minor).$(Build).$(Revision)</Version>

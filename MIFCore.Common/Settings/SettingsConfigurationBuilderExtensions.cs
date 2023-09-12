@@ -15,6 +15,8 @@ namespace MIFCore.Common.Settings
                 .AddJsonFile("settings.json", optional: false)
                 .AddJsonFile("settings.default.json", optional: true);
 
+            builder.AddEnvironmentVariables();
+
             return builder;
         }
 
