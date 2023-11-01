@@ -7,24 +7,24 @@ namespace MIFCore.Hangfire
 {
     public static class IRecurringJobManagerExtensions
     {
-        public static void CreateRecurringJob(this IRecurringJobManager recurringJobManager, string jobName, Expression<Func<Task>> methodCall, string cronSchedule = null, string queue = "default", bool triggerIfNeverExecuted = false)
+        public static void CreateRecurringJob(this IRecurringJobManager recurringJobManager, string jobName, Expression<Func<Task>> methodCall, string cronSchedule = null, string queue = "default", bool triggerIfNeverExecuted = false, TimeZoneInfo timeZone = null)
         {
             var manager = recurringJobManager as MIFCoreRecurringJobManager;
 
             if (manager is null)
                 throw new ArgumentException("Parameter 'recurringJobManager' is not of type 'MIFCore.Hangfire.MIFCoreRecurringJobManager'");
             
-            manager.CreateRecurringJob(jobName: jobName, methodCall: methodCall, cronSchedule: cronSchedule, queue: queue, triggerIfNeverExecuted: triggerIfNeverExecuted);
+            manager.CreateRecurringJob(jobName: jobName, methodCall: methodCall, cronSchedule: cronSchedule, queue: queue, triggerIfNeverExecuted: triggerIfNeverExecuted, timeZone: timeZone);
         }
 
-        public static void CreateRecurringJob<T>(this IRecurringJobManager recurringJobManager, string jobName, Expression<Func<T, Task>> methodCall, string cronSchedule = null, string queue = "default", bool triggerIfNeverExecuted = false)
+        public static void CreateRecurringJob<T>(this IRecurringJobManager recurringJobManager, string jobName, Expression<Func<T, Task>> methodCall, string cronSchedule = null, string queue = "default", bool triggerIfNeverExecuted = false, TimeZoneInfo timeZone = null)
         {
             var manager = recurringJobManager as MIFCoreRecurringJobManager;
 
             if (manager is null)
                 throw new ArgumentException("Parameter 'recurringJobManager' is not of type 'MIFCore.Hangfire.MIFCoreRecurringJobManager'");
 
-            manager.CreateRecurringJob<T>(jobName: jobName, methodCall: methodCall, cronSchedule: cronSchedule, queue: queue, triggerIfNeverExecuted: triggerIfNeverExecuted);
+            manager.CreateRecurringJob<T>(jobName: jobName, methodCall: methodCall, cronSchedule: cronSchedule, queue: queue, triggerIfNeverExecuted: triggerIfNeverExecuted, timeZone: timeZone);
         }
     }
 }
