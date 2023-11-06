@@ -1,4 +1,5 @@
 ﻿using Hangfire;
+using Hangfire.Annotations;
 using MIFCore.Hangfire;
 using System;
 using System.Threading.Tasks;
@@ -22,6 +23,14 @@ namespace MIFCore.TestApp
 
             Console.WriteLine("yees");
             this.backgroundJobClient.Enqueue<SomeJob>(y => y.DoTheNextJob());
+
+            return Task.CompletedTask;
+        }
+
+        public Task DingleDog([NotNull] string dingledog) {
+            var current = BackgroundJobContext.Current;
+
+            Console.WriteLine($"dingledog: {dingledog}");
 
             return Task.CompletedTask;
         }

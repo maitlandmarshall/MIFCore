@@ -1,7 +1,15 @@
 {
   "connectionString": "",
-  "bindingPort": 80,
-  "bindingPath": "abc",
-  "instrumentationKey": ""
-
+  "bindingPort": 1337,
+  "bindingPath": "",
+  "instrumentationKey": "",
+  "some-job": "* * * * *",
+  "some-goober-boy": {
+    "cron": "* * * * *",
+    "timezone": "Bougainville Standard Time"
+  },
+  "some-bigboi": {
+    "cron": "* * * * *",
+    "timezone": "Samoa Standard Time"
+  }
 }
