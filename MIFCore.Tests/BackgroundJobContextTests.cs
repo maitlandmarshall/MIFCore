@@ -1,8 +1,5 @@
 using Hangfire;
-using Hangfire.MemoryStorage;
 using MIFCore.Hangfire;
-using MIFCore;
-using Microsoft.Extensions.Hosting;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Threading.Tasks;
@@ -10,6 +7,7 @@ using System.Threading.Tasks;
 namespace MIFCore.Tests
 {
     [TestClass]
+    [DoNotParallelize]
     public class BackgroundJobContextTests
     {
         private static readonly TaskCompletionSource<bool> taskCompletionSource = new TaskCompletionSource<bool>();
@@ -20,26 +18,20 @@ namespace MIFCore.Tests
                 await Task.Delay(5);
                 var bg = BackgroundJobContext.Current;
 
-                taskCompletionSource.SetResult(bg != null);
+                taskCompletionSource.TrySetResult(bg != null);
             }
             catch (Exception)
             {
-                taskCompletionSource.SetResult(false);
+                taskCompletionSource.TrySetResult(false);
             }
         }
 
         [TestMethod]
         public async Task CurrentJob_InAsyncExecutingJob_NotNull()
         {
-            var host = IntegrationHost.CreateDefaultBuilder()
-                .UseHangfire(cfg => cfg.UseMemoryStorage())
-                .Build();
-
+            using var server = new HangfireTestServer();
             BackgroundJob.Enqueue(() => BackgroundJobContext_Job());
-
-            _ = host.RunAsync();
-
-            var result = await taskCompletionSource.Task;
+            var result = await taskCompletionSource.Task.WaitAsync(TimeSpan.FromSeconds(15));
             Assert.IsTrue(result);
         }
     }
