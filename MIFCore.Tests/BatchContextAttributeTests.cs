@@ -1,5 +1,4 @@
 using Hangfire;
-using Hangfire.MemoryStorage;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MIFCore.Hangfire;
 using System;
@@ -8,6 +7,7 @@ using System.Threading.Tasks;
 namespace MIFCore.Tests
 {
     [TestClass]
+    [DoNotParallelize]
     public class BatchContextAttributeTests
     {
         private static readonly TaskCompletionSource<bool> taskCompletionSource = new TaskCompletionSource<bool>();
@@ -36,10 +36,10 @@ namespace MIFCore.Tests
                 var test1 = BackgroundJobContext.Current.GetBatchParameter<string>("Test");
                 var test2 = BackgroundJobContext.Current.GetBatchParameter<string>("Test2");
 
-                Assert.IsNotNull(batchId);
-                Assert.IsNotNull(started);
-                Assert.IsTrue(!string.IsNullOrEmpty(test1));
-                Assert.IsTrue(!string.IsNullOrEmpty(test2));
+                Assert.AreNotEqual(Guid.Empty, batchId);
+                Assert.IsTrue(started > DateTime.MinValue);
+                Assert.AreEqual("this is a test", test1);
+                Assert.AreEqual("a separate test", test2);
 
                 BackgroundJob.Enqueue(() => NestedJob2());
             }
@@ -58,10 +58,10 @@ namespace MIFCore.Tests
                 var test1 = BackgroundJobContext.Current.GetBatchParameter<string>("Test");
                 var test2 = BackgroundJobContext.Current.GetBatchParameter<string>("Test2");
 
-                Assert.IsNotNull(batchId);
-                Assert.IsNotNull(started);
-                Assert.IsTrue(!string.IsNullOrEmpty(test1));
-                Assert.IsTrue(!string.IsNullOrEmpty(test2));
+                Assert.AreNotEqual(Guid.Empty, batchId);
+                Assert.IsTrue(started > DateTime.MinValue);
+                Assert.AreEqual("this is a test", test1);
+                Assert.AreEqual("a separate test", test2);
 
                 taskCompletionSource.SetResult(true);
             }
@@ -74,15 +74,9 @@ namespace MIFCore.Tests
         [TestMethod]
         public async Task SetBatchParameter_NestedJob_ValuesIntact()
         {
-            var host = IntegrationHost.CreateDefaultBuilder()
-                .UseHangfire(cfg => cfg.UseMemoryStorage().UseFilter(new BatchContextFilter()))
-                .Build();
-
+            using var server = new HangfireTestServer(new BatchContextFilter());
             BackgroundJob.Enqueue(() => RootJob());
-
-            await host.StartAsync();
-
-            var result = await taskCompletionSource.Task;
+            var result = await taskCompletionSource.Task.WaitAsync(TimeSpan.FromSeconds(15));
             Assert.IsTrue(result);
         }
     }

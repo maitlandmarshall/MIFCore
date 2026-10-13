@@ -16,7 +16,7 @@ namespace MIFCore.Common
                 var mainModule = MainModule;
 
                 // Handle if called from dotnet ef migrations or other tool
-                if (Path.GetFileName(mainModule) == "dotnet.exe")
+                if (Path.GetFileName(mainModule) == "dotnet.exe" || Path.GetFileName(mainModule) == "dotnet")
                 {
                     return Directory.GetCurrentDirectory();
                 }

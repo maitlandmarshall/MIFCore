@@ -14,7 +14,8 @@ namespace MIFCore.Hangfire
             var options = new SqlServerStorageOptions
             {
                 SchemaName = HangfireConfig.SchemaName,
-                PrepareSchemaIfNecessary = true
+                PrepareSchemaIfNecessary = true,
+                EnableHeavyMigrations = false
             };
 
             var jobStorage = new MAMQSqlServerStorage(connectionString, options, queues);

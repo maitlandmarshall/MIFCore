@@ -29,21 +29,27 @@ namespace MIFCore.Hangfire
             this.jobStorageFactory = jobStorageFactory;
         }
 
-        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        public override async Task StartAsync(CancellationToken cancellationToken)
         {
             if (string.IsNullOrEmpty(this.hangfireConfig.ConnectionString))
                 throw new ArgumentNullException(nameof(this.hangfireConfig.ConnectionString));
 
-            var childScope = ServiceScope = this.rootScope.BeginLifetimeScope("HangfireServiceScope");
+            // .NET 10 runs ExecuteAsync entirely in the background. Complete database
+            // initialization and schedule registration before reporting successful startup.
+            await this.InitializeStorage();
+            this.startupHandler.PostConfigure(this.rootScope as IServiceProvider);
+            await base.StartAsync(cancellationToken);
+        }
+
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        {
+            using var childScope = ServiceScope = this.rootScope.BeginLifetimeScope("HangfireServiceScope");
             var activator = new AutofacLifecycleJobActivator(childScope);
             var options = new BackgroundJobServerOptions()
             {
                 Activator = activator,
                 Queues = this.hangfireConfig.Queues ?? JobQueue.Queues
             };
-
-            await this.InitializeStorage();
-            this.startupHandler.PostConfigure(this.rootScope as IServiceProvider);
 
             using (var server = new BackgroundJobServer(options))
             {

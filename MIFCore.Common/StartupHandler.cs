@@ -1,7 +1,11 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
+#if NET10_0_OR_GREATER
+using Microsoft.Data.SqlClient;
+#else
 using System.Data.SqlClient;
+#endif
 using System.Linq;
 using System.Threading.Tasks;
 

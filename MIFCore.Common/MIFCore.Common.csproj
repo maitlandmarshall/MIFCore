@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>netstandard2.1</TargetFramework>
+		<TargetFrameworks>netstandard2.1;net10.0</TargetFrameworks>
 		<Authors>Maitland Marshall</Authors>
 		<Company>MAIT DEV</Company>
 		<PackageProjectUrl>https://github.com/maitlandmarshall/MIFCore</PackageProjectUrl>
@@ -14,21 +14,33 @@
 
 		<Major>1</Major>
 		<Minor>0</Minor>
-		<Build>2</Build>
+		<Build>3</Build>
 		<Revision>0</Revision>
 
 		<Version>$(Major).$(Minor).$(Build).$(Revision)</Version>
 		<AssemblyVersion>$(Major).$(Minor).$(Build)</AssemblyVersion>
 	</PropertyGroup>
 
-	<ItemGroup>
+	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
 		<PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="3.1.17" />
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="3.1.7" />
 		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="3.1.7" />
-		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-		<PackageReference Include="System.Data.SqlClient" Version="4.8.3" />
+		<PackageReference Include="System.Data.SqlClient" Version="4.9.1" />
 		<PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="3.1.7" />
 
+	</ItemGroup>
+
+    <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
+        <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="10.0.12" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.12" />
+        <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.12" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.12" />
+        <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.7" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="System.Text.Encodings.Web" Version="4.7.2" />
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 		<PackageReference Include="Autofac" Version="5.2.0" />
 		<PackageReference Include="Autofac.Extensions.DependencyInjection" Version="6.0.0" />
 	</ItemGroup>

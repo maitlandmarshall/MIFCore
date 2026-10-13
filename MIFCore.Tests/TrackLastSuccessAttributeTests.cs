@@ -1,6 +1,4 @@
 ﻿using Hangfire;
-using Hangfire.MemoryStorage;
-using Microsoft.Extensions.Hosting;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MIFCore.Hangfire;
 using System;
@@ -11,10 +9,18 @@ using System.Threading.Tasks;
 namespace MIFCore.Tests
 {
     [TestClass]
+    [DoNotParallelize]
     public class TrackLastSuccessAttributeTests
     {
-        private static readonly TaskCompletionSource<bool> taskCompletionSource = new TaskCompletionSource<bool>();
+        private static TaskCompletionSource<bool> taskCompletionSource;
         private static readonly IDictionary<int, DateTime> paramSuccessMap = new Dictionary<int, DateTime>();
+
+        [TestInitialize]
+        public void Initialize()
+        {
+            taskCompletionSource = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            paramSuccessMap.Clear();
+        }
 
         [TrackLastSuccess("Test")]
         public static async Task LastSuccess_Job()
@@ -25,11 +31,11 @@ namespace MIFCore.Tests
 
                 var lastSuccess = BackgroundJobContext.Current.BackgroundJob.GetLastSuccess();
 
-                if (lastSuccess.HasValue) taskCompletionSource.SetResult(true);
+                if (lastSuccess.HasValue) taskCompletionSource.TrySetResult(true);
             }
             catch (Exception)
             {
-                taskCompletionSource.SetResult(false);
+                taskCompletionSource.TrySetResult(false);
             }
         }
 
@@ -44,17 +50,17 @@ namespace MIFCore.Tests
 
                 if (lastSuccess.HasValue)
                 {
-                    paramSuccessMap.Add(paramId, lastSuccess.Value);
+                    paramSuccessMap[paramId] = lastSuccess.Value;
 
                     if (paramSuccessMap.Count > 1)
                     {
-                        taskCompletionSource.SetResult(true);
+                        taskCompletionSource.TrySetResult(true);
                     }
                 }
             }
             catch (Exception)
             {
-                taskCompletionSource.SetResult(false);
+                taskCompletionSource.TrySetResult(false);
             }
 
         }
@@ -62,28 +68,18 @@ namespace MIFCore.Tests
         [TestMethod]
         public async Task CanAccessFromJobParameters_Ok()
         {
-            var host = IntegrationHost.CreateDefaultBuilder()
-                .UseHangfire(cfg => cfg.UseMemoryStorage())
-                .Build();
-
+            using var server = new HangfireTestServer();
             string job = BackgroundJob.Enqueue(() => LastSuccess_Job());
             BackgroundJob.ContinueJobWith(job, () => LastSuccess_Job());
 
-            _ = host.RunAsync();
-
-            var result = await taskCompletionSource.Task;
+            var result = await taskCompletionSource.Task.WaitAsync(TimeSpan.FromSeconds(15));
             Assert.IsTrue(result);
         }
 
         [TestMethod]
         public async Task ParamterizedMethod_WithDynamicJobId_HasLastDistinctLastSuccessForEachDistinctParamCombo()
         {
-            var host = IntegrationHost.CreateDefaultBuilder()
-                   .UseHangfire(cfg => cfg.UseMemoryStorage())
-                   .Build();
-
-            await host.StartAsync();
-
+            using var server = new HangfireTestServer();
             string job = BackgroundJob.Enqueue(() => LastSuccess_Job(5));
             job = BackgroundJob.ContinueJobWith(job, () => LastSuccess_Job(4));
             job = BackgroundJob.ContinueJobWith(job, () => LastSuccess_Job(5));
@@ -92,7 +88,7 @@ namespace MIFCore.Tests
             job = BackgroundJob.ContinueJobWith(job, () => LastSuccess_Job(5));
             job = BackgroundJob.ContinueJobWith(job, () => LastSuccess_Job(4));
 
-            var result = await taskCompletionSource.Task;
+            var result = await taskCompletionSource.Task.WaitAsync(TimeSpan.FromSeconds(15));
 
             Assert.IsTrue(result);
             Assert.IsTrue(paramSuccessMap.Values.Distinct().Count() == 2);
